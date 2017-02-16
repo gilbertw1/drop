@@ -1,0 +1,9 @@
+
+[drop]
+dir = '~/.drop'
+host = ''
+
+[aws]
+bucket = 'drop'
+key = ''
+secret = ''
