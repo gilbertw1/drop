@@ -45,7 +45,7 @@ fn gen_filename(ext: &str) -> String {
 fn load_config() -> DropConfig {
   let home_dir = env::home_dir().unwrap();
   let mut conf = config::Config::new();
-  let conf_file = home_dir.join(".config/drop/config").to_string_lossy().into_owned();
+  let conf_file = home_dir.join(".config/drop/drop.conf").to_string_lossy().into_owned();
   conf.merge(config::File::new(conf_file.as_str(), config::FileFormat::Toml)).unwrap();
   DropConfig {
     drop_dir: conf.get("drop.dir").unwrap().into_str().unwrap().replace("~", &home_dir.to_string_lossy().into_owned()),

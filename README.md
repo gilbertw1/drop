@@ -20,10 +20,10 @@ Clone this repo
 
     git clone git@github.com:gilbertw1/drop.git
 
-Place ```config.default``` in ```~/.config/drop/config``` and edit it with required values
+Place ```config.toml.default``` in ```~/.config/drop/config.toml``` and edit it with required values
 
     mkdir -p ~/.config/drop
-    cp config.default ~/.config/drop/config
+    cp config.toml.default ~/.config/drop/config.toml
     
 Build drop:
 
@@ -48,7 +48,7 @@ Run:
 Configuration
 -------------
 
-The drop configuration file should be placed at ```~/.config/drop/config```. It's values are as follows:
+The drop configuration file should be placed at ```~/.config/drop/config.toml```. It's values are as follows:
 
 ```toml
     [drop]
@@ -94,4 +94,4 @@ In order for Drop to work correctly with a custom domain, a few additional steps
 
 * Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in the "Static Website Hosting" properties section). In the above example, in the DNS settings for ```mydomain.com```, a cname entry for ```drop``` would be added pointing to the static S3 site.
 
-* Update the ```~/.config/drop/config``` file with the variable ```host``` pointing to your custom domain (```drop.mydomain.com```)
+* Update the ```~/.config/drop/config.toml``` file with the variable ```host``` pointing to your custom domain (```drop.mydomain.com```)
