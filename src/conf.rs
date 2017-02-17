@@ -1,11 +1,22 @@
 use std;
 use config;
+use std::io::Write;
+use std::fs::File;
+use std::path::PathBuf;
+
+use util;
 
 pub fn load_config() -> DropConfig {
   let home_dir = std::env::home_dir().unwrap();
+  let conf_file = home_dir.join(".config/drop/config.toml");
+
+  if !conf_file.exists() {
+    create_default_config_File(&conf_file)
+  }
+
   let mut conf = config::Config::new();
-  let conf_file = home_dir.join(".config/drop/config.toml").to_string_lossy().into_owned();
-  conf.merge(config::File::new(conf_file.as_str(), config::FileFormat::Toml)).unwrap();
+  conf.merge(config::File::new(&util::path_to_str(&conf_file), config::FileFormat::Toml)).unwrap();
+
   let config = DropConfig {
     drop_dir: conf.get("drop.dir").unwrap().into_str().unwrap().replace("~", &home_dir.to_string_lossy().into_owned()),
     drop_host: conf.get("drop.host").map(|host| host.into_str().unwrap()),
@@ -14,12 +25,20 @@ pub fn load_config() -> DropConfig {
     aws_secret: conf.get("aws.secret").map(|secret| secret.into_str().unwrap()),
   };
 
-  ensure_directory_exists(&config.drop_dir);
+  ensure_directory_exists(&PathBuf::from(&config.drop_dir));
   config
 }
 
-fn ensure_directory_exists(dir: &String) {
+
+fn ensure_directory_exists(dir: &PathBuf) {
   std::fs::create_dir_all(dir);
+}
+
+fn create_default_config_File(config_file_path: &PathBuf) {
+  ensure_directory_exists(&config_file_path.parent().unwrap().to_path_buf());
+  let DEFAULT_CONFIG: &'static str = include_str!("../config.toml.default");
+  let mut f = File::create(config_file_path).unwrap();
+  f.write_all(DEFAULT_CONFIG.as_bytes());
 }
 
 #[derive(Debug)]

@@ -1,9 +1,9 @@
 
 [drop]
 dir = '~/.drop'
-host = ''
+# host = 'my.host.com'
 
 [aws]
-bucket = 'drop'
-key = ''
-secret = ''
+# bucket = 'drop'
+# key = '<aws-key>'
+# secret = '<aws-secret>'
