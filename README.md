@@ -40,10 +40,21 @@ Usage
 
 Drop can be used to take a screenshot and allows you to select a portion of the screen to save and upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once the screenshot has been saved and upload a notification will popup saying the screenshot has been upload and a url to the screenshot will be saved in the clipboard.
 
-Run:
-
-    ./drop
+    drop
     
+
+### Take a screenshot
+   
+Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system clipboard.
+
+    drop -f <file>
+
+
+### Help
+
+Help can be accessed easily by using the ```-h``` flag.
+
+    drop -h
 
 Configuration
 -------------
