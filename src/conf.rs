@@ -6,6 +6,8 @@ use std::path::PathBuf;
 
 use util;
 
+const DEFAULT_CONFIG: &'static str = include_str!("../config.toml.default");
+
 pub fn load_config() -> DropConfig {
   let home_dir = std::env::home_dir().unwrap();
   let conf_file = home_dir.join(".config/drop/config.toml");
@@ -36,7 +38,6 @@ fn ensure_directory_exists(dir: &PathBuf) {
 
 fn create_default_config_File(config_file_path: &PathBuf) {
   ensure_directory_exists(&config_file_path.parent().unwrap().to_path_buf());
-  let DEFAULT_CONFIG: &'static str = include_str!("../config.toml.default");
   let mut f = File::create(config_file_path).unwrap();
   f.write_all(DEFAULT_CONFIG.as_bytes());
 }

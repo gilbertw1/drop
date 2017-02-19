@@ -1,14 +1,14 @@
 use std::process::{Command, Stdio};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::Path;
 
-pub fn crop_and_take_screenshot(out_path: &PathBuf) -> bool {
+pub fn crop_and_take_screenshot(out_path: &Path) -> bool {
   let slop_out = run_slop();
   if slop_out.cancel {
     println!("Cancelled drop, exiting");
     false
   } else {
-    crop_and_save_screenshot(&slop_out, &out_path);
+    crop_and_save_screenshot(&slop_out, out_path);
     true
   }
 }
@@ -33,7 +33,7 @@ fn run_slop() -> SlopOutput {
   }
 }
 
-fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &PathBuf) {
+fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path) {
   Command::new("import")
     .args(&["-window", "root", "-crop", &slop_out.g, &out_path.to_string_lossy().into_owned()])
     .spawn().unwrap().wait();
