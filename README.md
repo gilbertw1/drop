@@ -112,3 +112,11 @@ In order for Drop to work correctly with a custom domain, a few additional steps
 * Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in the "Static Website Hosting" properties section). In the above example, in the DNS settings for ```mydomain.com```, a cname entry for ```drop``` would be added pointing to the static S3 site.
 
 * Update the ```~/.config/drop/config.toml``` file with the variable ```host``` pointing to your custom domain (```drop.mydomain.com```)
+
+
+Roadmap
+-------
+* Better error handling
+* Add support for OSX
+* Reduce non-rust dependencies
+* Add support for uploading to more services than just S3
