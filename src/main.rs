@@ -18,7 +18,7 @@ use conf::DropConfig;
 fn main() {
   let cli_app = cli::create_drop_cli_app();
   let matches = cli_app.get_matches();
-  let config = conf::load_config();
+  let config = conf::load_config(&matches);
 
   if matches.is_present("file") {
     handle_file_upload(config, matches);
@@ -28,7 +28,7 @@ fn main() {
 }
 
 fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
-  let out_file = util::gen_file(config.drop_dir.clone(), "png");
+  let out_file = util::gen_file(config.dir.clone(), "png", config.unique_length);
 
   let success = screenshot::crop_and_take_screenshot(out_file.as_path());
 
@@ -37,14 +37,15 @@ fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
   }
 
   if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
-    println!("AWS not properly defined, not uploading.");
+    println!("S3 not properly configured, not uploading screenshot.");
     clip::copy_to_clipboard(format!("file://{}", util::path_to_str(&out_file.as_path())));
     notify::send_screenshot_notification(&out_file.as_path());
   } else {
     aws::upload_file_to_s3(&config, &out_file.as_path(), None);
     let url = util::create_drop_url(&config, util::path_file_name(&out_file.as_path()));
-    clip::copy_to_clipboard(url);
+    clip::copy_to_clipboard(url.clone());
     notify::send_screenshot_notification(&out_file.as_path());
+    println!("{}", url);
   }
 }
 
@@ -53,11 +54,15 @@ fn handle_file_upload(config: DropConfig, matches: ArgMatches) {
 
   if !file.exists() {
     println!("File does not exist! ({:?})", file);
+    std::process::exit(1);
+  } else if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
+    println!("S3 not properly configured, not uploading file.")
   } else {
-    let filename = util::gen_filename_from_existing(file, 10);
+    let filename = util::gen_filename_from_existing(file, config.filename_strategy.clone(), config.unique_length);
     aws::upload_file_to_s3(&config, &file, Some(filename.clone()));
     let url = util::create_drop_url(&config, filename.clone());
-    clip::copy_to_clipboard(url);
+    clip::copy_to_clipboard(url.clone());
     notify::send_upload_notification(filename);
+    println!("{}", url);
   }
 }

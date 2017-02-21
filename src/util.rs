@@ -26,22 +26,27 @@ fn from_os_str(os_str: &OsStr) -> String {
 }
 
 pub fn create_drop_url(config: &DropConfig, filename: String) -> String {
-  match config.drop_host.clone() {
+  match config.host.clone() {
     Some(host) => format!("http://{}/{}", host, filename),
     None => format!("http://s3.amazonaws.com/{}/{}", config.aws_bucket.clone().unwrap(), filename)
   }
 }
 
-pub fn gen_file(dir: String, ext: &str) -> PathBuf {
-  let filename = gen_filename(ext, 10);
+pub fn gen_file(dir: String, ext: &str, len: usize) -> PathBuf {
+  let filename = gen_filename(ext, len);
   let file_path = Path::new(&dir);
   file_path.join(&filename)
 }
 
-pub fn gen_filename_from_existing(file: &Path, len: usize) -> String {
+pub fn gen_filename_from_existing(file: &Path, strategy: String, len: usize) -> String {
   let file_base = path_file_stem(file);
   let file_ext = path_file_ext(file);
-  format!("{}-{}.{}", file_base, rand_string(len), file_ext)
+  match strategy.as_ref() {
+    "EXACT" => format!("{}.{}", file_base, file_ext),
+    "APPEND" => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
+    "REPLACE" => format!("{}.{}", rand_string(len), file_ext),
+    _ => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
+  }
 }
 
 fn gen_filename(ext: &str, len: usize) -> String {

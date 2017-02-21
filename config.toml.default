@@ -2,6 +2,8 @@
 [drop]
 dir = '~/.drop'
 # host = 'my.host.com'
+# filename_stragey = APPEND
+# unique_length = 10
 
 [aws]
 # bucket = 'drop'
