@@ -63,19 +63,19 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
 
 ```toml
     [drop]
-    dir = '~/.drop'   # Directory used to save screenshots (DEFAULT: ~/.drop)
-    host = ''    # Custom domain used to generate screenshot links (DEFAULT: empty)
-    unique_length = 10    # Length of unique string used in creating filenames (DEFAULT: 10)
-    filename_strategy = APPEND # Naming strategy to use when uploading file (DEFAULT: APPEND)
-                               #   VALUES:           
-                               #       APPEND: Append unique string to filename
-                               #       EXACT: Don't alter filename when uploading
-                               #       REPLACE: Replace filename with unique string
+    dir = '~/.drop'           # Directory used to save screenshots (DEFAULT: ~/.drop)
+    host = ''                # Custom domain used to generate screenshot links (DEFAULT: empty)
+    unique_length = 10         # Length of unique string used in creating filenames (DEFAULT: 10)
+    filename_strategy = 'APPEND' # Naming strategy to use when uploading file (DEFAULT: APPEND)
+                                 #   VALUES:           
+                                 #       APPEND: Append unique string to filename
+                                 #       EXACT: Don't alter filename when uploading
+                                 #       REPLACE: Replace filename with unique string
 
     [aws]
-    bucket = 'drop'    # S3 bucket to upload screenshots & files to (DEFAULT: empty)
-    key = ''     # AWS credentials used to authenticate with S3 (DEFAULT: empty)
-    secret = ''     # AWS secret used to authenticate with S3 (DEFAULT: empty)
+    bucket = 'drop'           # S3 bucket to upload screenshots & files to (DEFAULT: empty)
+    key = ''                # AWS credentials used to authenticate with S3 (DEFAULT: empty)
+    secret = ''              # AWS secret used to authenticate with S3 (DEFAULT: empty)
 ```
 
 * More info on aws access keys [here](https://aws.amazon.com/developers/access-keys/)

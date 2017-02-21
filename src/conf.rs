@@ -28,8 +28,8 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     aws_key: get_string_value(matches, "aws-key").or(conf.get_str("aws.key")),
     aws_secret: get_string_value(matches, "aws-secret").or(conf.get_str("aws.secret")),
     filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy"))),
-    unique_length: get_string_value(matches, "unique-length").or(conf.get_str("drop.unique_length"))
-                     .map(|ls| ls.parse::<usize>().unwrap()).unwrap_or(10),
+    unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
+                     .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
   };
 
   ensure_directory_exists(&PathBuf::from(&config.dir));
