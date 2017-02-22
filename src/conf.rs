@@ -59,8 +59,8 @@ fn ensure_directory_exists(dir: &PathBuf) {
 
 fn create_default_config_File(config_file_path: &PathBuf) {
   ensure_directory_exists(&config_file_path.parent().unwrap().to_path_buf());
-  let mut f = File::create(config_file_path).unwrap();
-  f.write_all(DEFAULT_CONFIG.as_bytes());
+  let mut file = File::create(config_file_path).unwrap();
+  file.write_all(DEFAULT_CONFIG.as_bytes());
 }
 
 #[derive(Debug)]

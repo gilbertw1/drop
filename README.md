@@ -47,7 +47,7 @@ Drop can be used to take a screenshot and allows you to select a portion of the 
    
 Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system clipboard.
 
-    drop -f <file>
+    drop <file>
 
 
 ### Help
@@ -63,19 +63,19 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
 
 ```toml
     [drop]
-    dir = '~/.drop'           # Directory used to save screenshots (DEFAULT: ~/.drop)
-    host = ''                # Custom domain used to generate screenshot links (DEFAULT: empty)
-    unique_length = 10         # Length of unique string used in creating filenames (DEFAULT: 10)
-    filename_strategy = 'APPEND' # Naming strategy to use when uploading file (DEFAULT: APPEND)
-                                 #   VALUES:           
-                                 #       APPEND: Append unique string to filename
-                                 #       EXACT: Don't alter filename when uploading
-                                 #       REPLACE: Replace filename with unique string
+    dir = '~/.drop'               # Directory used to save screenshots (DEFAULT: ~/.drop)
+    host = ''                     # Custom domain used to generate screenshot links (DEFAULT: empty)
+    unique_length = 10            # Length of unique string used in creating filenames (DEFAULT: 10)
+    filename_strategy = 'APPEND'  # Naming strategy to use when uploading file (DEFAULT: APPEND)
+                                  #   VALUES:           
+                                  #       APPEND: Append unique string to filename
+                                  #       EXACT: Don't alter filename when uploading
+                                  #       REPLACE: Replace filename with unique string
 
     [aws]
-    bucket = 'drop'           # S3 bucket to upload screenshots & files to (DEFAULT: empty)
-    key = ''                # AWS credentials used to authenticate with S3 (DEFAULT: empty)
-    secret = ''              # AWS secret used to authenticate with S3 (DEFAULT: empty)
+    bucket = 'drop'               # S3 bucket to upload screenshots & files to (DEFAULT: empty)
+    key = ''                      # AWS credentials used to authenticate with S3 (DEFAULT: empty)
+    secret = ''                   # AWS secret used to authenticate with S3 (DEFAULT: empty)
 ```
 
 * More info on aws access keys [here](https://aws.amazon.com/developers/access-keys/)
@@ -84,7 +84,7 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
 S3 Setup
 --------
 
-If configuring Drop to upload to S3 a bucket will be required. Info on creating S3 buckets can be found here: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html. Once a bucket has been created, if you want the drops to be publicly accessible the following policy should be added to the bucket:
+If configuring Drop to upload to S3, a bucket will be required. Info on creating S3 buckets can be found here: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html. Once a bucket has been created, if you want the drops to be publicly accessible the following policy should be added to the bucket:
 
     {
       "Version": "2008-10-17",
@@ -97,7 +97,7 @@ If configuring Drop to upload to S3 a bucket will be required. Info on creating 
       }]
     }
     
-* Replace ```bucket``` with the name of your bucket.
+* Replace ```bucket``` in the config file with the name of your bucket.
 
 
 Custom Domain Setup
