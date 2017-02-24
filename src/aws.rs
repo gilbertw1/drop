@@ -17,5 +17,5 @@ pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Optio
     cmd.arg(format!("s3://{}", config.aws_bucket.clone().unwrap()));
   }
 
-  cmd.output();
+  cmd.spawn().unwrap().wait();
 }

@@ -1,16 +1,22 @@
 drop
 ====
 
-A simple screenshot tool with S3 support written in rust.
+A simple screenshot, screencast, and file upload tool with S3 support written in rust.
 
 
 Dependencies
 ------------
 
-* slop - https://github.com/naelstrof/slop
-* imagemagick - https://www.imagemagick.org
+*Requrired*
+
 * s3cmd - http://s3tools.org/s3cmd
 * xsel - http://www.vergenet.net/%7Econrad/software/xsel/
+
+*Optional*
+
+* slop (screenshot + screencast) - https://github.com/naelstrof/slop
+* imagemagick (screenshot) - https://www.imagemagick.org
+* ffmpeg (screencast) - https://ffmpeg.org
 
 
 Installation
@@ -20,7 +26,7 @@ Clone this repo
 
     git clone git@github.com:gilbertw1/drop.git
 
-Place ```config.toml.default``` in ```~/.config/drop/config.toml``` and edit it with required values
+Optionally place ```config.toml.default``` in ```~/.config/drop/config.toml``` and edit it with desired values
 
     mkdir -p ~/.config/drop
     cp config.toml.default ~/.config/drop/config.toml
@@ -43,7 +49,11 @@ Drop can be used to take a screenshot and allows you to select a portion of the 
     drop
     
 
-### Take a screenshot
+### Take a screencast
+
+Drop can be used to take a screencast. This behaves identically to taking a screenshot except it records a video. A small button to stop the recording will appear in the top left of the screen.
+
+### Upload file
    
 Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system clipboard.
 
@@ -79,7 +89,7 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
 ```
 
 * More info on aws access keys [here](https://aws.amazon.com/developers/access-keys/)
-* If bucket, key, or secret is missing drop will only save the screenshot locally
+* If aws bucket, key, or secret is missing drop will only save the screenshot locally
 
 S3 Setup
 --------

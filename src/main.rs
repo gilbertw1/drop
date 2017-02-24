@@ -1,6 +1,8 @@
 extern crate config;
 extern crate rand;
 extern crate clap;
+extern crate gtk;
+extern crate libc;
 
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
@@ -12,6 +14,7 @@ mod notify;
 mod screenshot;
 mod util;
 mod cli;
+mod ui;
 
 use conf::DropConfig;
 
@@ -28,13 +31,12 @@ fn main() {
 }
 
 fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
-  let out_file = util::gen_file(config.dir.clone(), "png", config.unique_length);
-
-  let success = screenshot::crop_and_take_screenshot(out_file.as_path());
-
-  if !success {
-    std::process::exit(1);
-  }
+  let out_file =
+    if matches.is_present("video") {
+      take_screenshot_video(&config)
+    } else {
+      take_screenshot_image(&config)
+    };
 
   if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
     println!("S3 not properly configured, not uploading screenshot.");
@@ -47,6 +49,30 @@ fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
     notify::send_screenshot_notification(&out_file.as_path());
     println!("{}", url);
   }
+}
+
+fn take_screenshot_image(config: &DropConfig) -> PathBuf {
+  let out_file = util::gen_file(config.dir.clone(), "png", config.unique_length);
+
+  let success = screenshot::crop_and_take_screenshot(out_file.as_path());
+
+  if !success {
+    std::process::exit(1);
+  }
+
+  out_file
+}
+
+fn take_screenshot_video(config: &DropConfig) -> PathBuf {
+  let out_file = util::gen_file(config.dir.clone(), "mp4", config.unique_length);
+
+  let success = screenshot::crop_and_take_screencast(out_file.as_path());
+
+  if !success {
+    std::process::exit(1);
+  }
+
+  out_file
 }
 
 fn handle_file_upload(config: DropConfig, matches: ArgMatches) {

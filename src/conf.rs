@@ -23,13 +23,13 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
 
   let config = DropConfig {
     dir: conf.get_str("drop.dir").unwrap_or("~/.drop".to_string()).replace("~", &home_dir.to_string_lossy().into_owned()),
-    host: get_string_value(matches, "host").or(conf.get_str("drop.host")),
+    host: none_if_empty(get_string_value(matches, "host").or(conf.get_str("drop.host"))),
     aws_bucket: get_string_value(matches, "aws-bucket").or(conf.get_str("aws.bucket")),
     aws_key: get_string_value(matches, "aws-key").or(conf.get_str("aws.key")),
     aws_secret: get_string_value(matches, "aws-secret").or(conf.get_str("aws.secret")),
     filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy"))),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
-                     .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
+      .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
   };
 
   ensure_directory_exists(&PathBuf::from(&config.dir));
@@ -46,6 +46,13 @@ fn extract_strategy(strat: Option<String>) -> String {
     } else {
       panic!(format!("Unrecognized filename strategy: {}", strat))
     }
+  }
+}
+
+fn none_if_empty(optvalue: Option<String>) -> Option<String> {
+  match optvalue {
+    Some(ref value) if value != "" => Some(value.to_string()),
+    _ => None
   }
 }
 
