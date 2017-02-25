@@ -4,6 +4,7 @@ use std::process::{Command, Stdio, Child};
 use std::collections::HashMap;
 use std::path::Path;
 use libc::{kill, SIGTERM};
+use std::os::unix::io::{FromRawFd, AsRawFd};
 
 pub fn crop_and_take_screenshot(out_path: &Path) -> bool {
   let slop_out = run_slop();
@@ -16,11 +17,16 @@ pub fn crop_and_take_screenshot(out_path: &Path) -> bool {
   }
 }
 
-pub fn crop_and_take_screencast(out_path: &Path, audio: bool) -> bool {
+pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool) -> bool {
   let slop_out = run_slop();
   if slop_out.cancel {
     println!("Cancelled drop, exiting");
     false
+  } else if video_format == "gif" {
+    let child = start_cropped_screencast_process_gif(&slop_out, out_path);
+    ui::gtk_stop_recording_popup();
+    terminate_ffmpeg(child);
+    true
   } else {
     let mut child = start_cropped_screencast_process(&slop_out, out_path, audio);
     ui::gtk_stop_recording_popup();
@@ -84,6 +90,17 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audi
 
   cmd.arg(&out_path.to_string_lossy().into_owned());
   cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
+}
+
+fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path) -> Child {
+    Command::new("ffmpeg")
+    .args(&["-f", "x11grab",
+            "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+            "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
+            &out_path.to_string_lossy().into_owned()])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn().unwrap()
 }
 
 fn terminate_ffmpeg(mut child: Child) {

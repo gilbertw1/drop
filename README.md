@@ -66,6 +66,10 @@ Optionally include audio (off by default)
 
     drop -v -a true
     
+Create screencast as a gif:
+
+    drop -v --video-format gif
+    
 
 ### Upload file
    

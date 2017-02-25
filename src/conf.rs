@@ -30,6 +30,8 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy"))),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
+    audio: get_bool_value(matches, "audio", false),
+    video_format: get_video_format(matches)
   };
 
   ensure_directory_exists(&PathBuf::from(&config.dir));
@@ -52,12 +54,23 @@ fn extract_strategy(strat: Option<String>) -> String {
 fn none_if_empty(optvalue: Option<String>) -> Option<String> {
   match optvalue {
     Some(ref value) if value != "" => Some(value.to_string()),
-    _ => None
+    _ => None,
   }
 }
 
 fn get_string_value(matches: &ArgMatches, key: &str) -> Option<String> {
   matches.value_of(key).map(|m| m.to_string())
+}
+
+fn get_bool_value(matches: &ArgMatches, key: &str, default: bool) -> bool {
+  matches.value_of("audio").unwrap_or(&format!("{}", default)).parse::<bool>().unwrap_or(default)
+}
+
+fn get_video_format(matches: &ArgMatches) -> String {
+  match matches.value_of("video-format") {
+    Some("gif") => "gif".to_string(),
+    _ => "mp4".to_string(),
+  }
 }
 
 fn ensure_directory_exists(dir: &PathBuf) {
@@ -79,4 +92,8 @@ pub struct DropConfig {
   pub aws_secret: Option<String>,
   pub filename_strategy: String,
   pub unique_length: usize,
+
+  // CLI Only Options
+  pub audio: bool,
+  pub video_format: String
 }
