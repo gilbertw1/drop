@@ -1,10 +1,11 @@
+use std;
 use gtk;
 use gtk::prelude::*;
 
 pub fn gtk_stop_recording_popup() {
   if gtk::init().is_err() {
     println!("Failed to initialize GTK.");
-    return;
+    std::process::exit(1);
   }
 
   let window = gtk::Window::new(gtk::WindowType::Popup);
@@ -21,8 +22,10 @@ pub fn gtk_stop_recording_popup() {
   let button = gtk::Button::new_with_label("Stop Recording");
 
   window.add(&button);
+  let wclone = window.clone();
 
   button.connect_clicked(move |_| {
+    wclone.destroy();
     gtk::main_quit();
   });
 
