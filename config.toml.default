@@ -2,7 +2,7 @@
 [drop]
 dir = '~/.drop'
 # host = 'my.host.com'
-# filename_stragey = APPEND
+# filename_stragey = 'append'
 # unique_length = 10
 
 [aws]

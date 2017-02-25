@@ -33,7 +33,8 @@ fn main() {
 fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
   let out_file =
     if matches.is_present("video") {
-      take_screenshot_video(&config)
+      let audio = matches.value_of("audio").unwrap_or("false").parse::<bool>().unwrap_or(false);
+      take_screenshot_video(&config, audio)
     } else {
       take_screenshot_image(&config)
     };
@@ -63,10 +64,10 @@ fn take_screenshot_image(config: &DropConfig) -> PathBuf {
   out_file
 }
 
-fn take_screenshot_video(config: &DropConfig) -> PathBuf {
+fn take_screenshot_video(config: &DropConfig, audio: bool) -> PathBuf {
   let out_file = util::gen_file(config.dir.clone(), "mp4", config.unique_length);
 
-  let success = screenshot::crop_and_take_screencast(out_file.as_path());
+  let success = screenshot::crop_and_take_screencast(out_file.as_path(), audio);
 
   if !success {
     std::process::exit(1);

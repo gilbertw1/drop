@@ -42,6 +42,13 @@ Run drop:
 Usage
 -----
 
+### Help
+
+Comprehensive help can be accessed easily by using the ```-h``` flag.
+
+    drop -h
+    
+
 ### Take a screenshot
 
 Drop can be used to take a screenshot and allows you to select a portion of the screen to save and upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once the screenshot has been saved and upload a notification will popup saying the screenshot has been upload and a url to the screenshot will be saved in the clipboard.
@@ -53,18 +60,19 @@ Drop can be used to take a screenshot and allows you to select a portion of the 
 
 Drop can be used to take a screencast. This behaves identically to taking a screenshot except it records a video. A small button to stop the recording will appear in the top left of the screen.
 
+    drop -v
+
+Optionally include audio (off by default)
+
+    drop -v -a true
+    
+
 ### Upload file
    
 Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system clipboard.
 
     drop <file>
 
-
-### Help
-
-Help can be accessed easily by using the ```-h``` flag.
-
-    drop -h
 
 Configuration
 -------------
@@ -76,11 +84,11 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
     dir = '~/.drop'               # Directory used to save screenshots (DEFAULT: ~/.drop)
     host = ''                     # Custom domain used to generate screenshot links (DEFAULT: empty)
     unique_length = 10            # Length of unique string used in creating filenames (DEFAULT: 10)
-    filename_strategy = 'APPEND'  # Naming strategy to use when uploading file (DEFAULT: APPEND)
+    filename_strategy = 'append'  # Naming strategy to use when uploading file (DEFAULT: APPEND)
                                   #   VALUES:           
-                                  #       APPEND: Append unique string to filename
-                                  #       EXACT: Don't alter filename when uploading
-                                  #       REPLACE: Replace filename with unique string
+                                  #       append: Append unique string to filename
+                                  #       exact: Don't alter filename when uploading
+                                  #       replace: Replace filename with unique string
 
     [aws]
     bucket = 'drop'               # S3 bucket to upload screenshots & files to (DEFAULT: empty)

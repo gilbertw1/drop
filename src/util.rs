@@ -42,9 +42,9 @@ pub fn gen_filename_from_existing(file: &Path, strategy: String, len: usize) -> 
   let file_base = path_file_stem(file);
   let file_ext = path_file_ext(file);
   match strategy.as_ref() {
-    "EXACT" => format!("{}.{}", file_base, file_ext),
-    "APPEND" => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
-    "REPLACE" => format!("{}.{}", rand_string(len), file_ext),
+    "exact" => format!("{}.{}", file_base, file_ext),
+    "append" => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
+    "replace" => format!("{}.{}", rand_string(len), file_ext),
     _ => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
   }
 }

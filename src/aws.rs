@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::path::Path;
 
 use conf::DropConfig;
@@ -17,5 +17,5 @@ pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Optio
     cmd.arg(format!("s3://{}", config.aws_bucket.clone().unwrap()));
   }
 
-  cmd.spawn().unwrap().wait();
+  cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap().wait();
 }

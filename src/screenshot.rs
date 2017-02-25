@@ -16,17 +16,14 @@ pub fn crop_and_take_screenshot(out_path: &Path) -> bool {
   }
 }
 
-pub fn crop_and_take_screencast(out_path: &Path) -> bool {
+pub fn crop_and_take_screencast(out_path: &Path, audio: bool) -> bool {
   let slop_out = run_slop();
   if slop_out.cancel {
     println!("Cancelled drop, exiting");
     false
   } else {
-    println!("Starting ffmpeg process");
-    let mut child = start_cropped_screencast_process(&slop_out, out_path);
-    println!("Kicking off stop popup");
+    let mut child = start_cropped_screencast_process(&slop_out, out_path, audio);
     ui::gtk_stop_recording_popup();
-    println!("Terminating ffmpeg");
     terminate_ffmpeg(child);
     true
   }
@@ -57,28 +54,36 @@ fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path) {
     .args(&["-window", "root",
             "-crop", &slop_out.g,
             &out_path.to_string_lossy().into_owned()])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
     .spawn().unwrap().wait();
 }
 
-fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path) -> Child {
-  Command::new("ffmpeg")
-    .args(&["-f", "x11grab",
-            "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-            "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
-            "-f", "alsa",
-            "-i", "pulse",
-            "-c:v", "libx264",
-            "-c:a", "aac",
-            "-crf", "23",
-            "-preset", "ultrafast",
-            "-movflags", "+faststart",
-            "-profile:v", "baseline",
-            "-level", "3.0",
-            "-pix_fmt", "yuv420p",
-            "-ac", "2",
-            "-strict", "experimental",
-            &out_path.to_string_lossy().into_owned()])
-    .spawn().unwrap()
+fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audio: bool) -> Child {
+  let mut cmd = Command::new("ffmpeg");
+  cmd.args(&["-f", "x11grab",
+             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+             "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
+             "-f", "alsa",
+             "-i", "pulse",
+             "-c:v", "libx264",
+             "-c:a", "aac",
+             "-crf", "23",
+             "-preset", "ultrafast",
+             "-movflags", "+faststart",
+             "-profile:v", "baseline",
+             "-level", "3.0",
+             "-pix_fmt", "yuv420p",
+             "-ac", "2",
+             "-strict", "experimental",
+             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
+
+  if !audio {
+    cmd.arg("-an");
+  }
+
+  cmd.arg(&out_path.to_string_lossy().into_owned());
+  cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
 }
 
 fn terminate_ffmpeg(mut child: Child) {
