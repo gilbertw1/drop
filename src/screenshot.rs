@@ -25,7 +25,7 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bo
 }
 
 fn run_slop() -> SlopOutput {
-  let result = Command::new("slop").args(&["--color=0.275,0.510,0.706", "-f", "%x %y %w %h %g %i"]).output().unwrap();
+  let result = Command::new("slop").args(&["-l", "-c", "0.3,0.4,0.6,0.4", "-f", "%x %y %w %h %g %i"]).output().unwrap();
 
   if !result.status.success() {
     println!("Cancelled drop, exiting");
