@@ -1,57 +1,48 @@
 #![feature(libc)]
 use ui;
+use std;
 use std::process::{Command, Stdio, Child};
 use std::collections::HashMap;
 use std::path::Path;
 use libc::{kill, SIGTERM};
 use std::os::unix::io::{FromRawFd, AsRawFd};
 
-pub fn crop_and_take_screenshot(out_path: &Path) -> bool {
+pub fn crop_and_take_screenshot(out_path: &Path) {
   let slop_out = run_slop();
-  if slop_out.cancel {
-    println!("Cancelled drop, exiting");
-    false
-  } else {
-    crop_and_save_screenshot(&slop_out, out_path);
-    true
-  }
+  crop_and_save_screenshot(&slop_out, out_path);
 }
 
-pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool) -> bool {
+pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool) {
   let slop_out = run_slop();
-  if slop_out.cancel {
-    println!("Cancelled drop, exiting");
-    false
-  } else if video_format == "gif" {
-    let child = start_cropped_screencast_process_gif(&slop_out, out_path);
-    ui::gtk_stop_recording_popup();
-    terminate_ffmpeg(child);
-    true
-  } else {
-    let mut child = start_cropped_screencast_process(&slop_out, out_path, audio);
-    ui::gtk_stop_recording_popup();
-    terminate_ffmpeg(child);
-    true
-  }
+  let process =
+    if video_format == "gif" {
+      start_cropped_screencast_process_gif(&slop_out, out_path)
+    } else {
+      start_cropped_screencast_process(&slop_out, out_path, audio)
+    };
+  ui::gtk_stop_recording_popup();
+  terminate_ffmpeg(process);
 }
 
 fn run_slop() -> SlopOutput {
-  let result = Command::new("slop").args(&["--color", "0.275,0.510,0.706"]).output().unwrap();
+  let result = Command::new("slop").args(&["--color=0.275,0.510,0.706", "-f", "%x %y %w %h %g %i"]).output().unwrap();
+
+  if !result.status.success() {
+    println!("Cancelled drop, exiting");
+    std::process::exit(1);
+  }
+
   let output = String::from_utf8(result.stdout).unwrap();
-  let out_map = output.trim()
-    .split("\n")
-    .map(|kv| kv.split("="))
-    .map(|mut kv| (kv.next().unwrap().into(), kv.next().unwrap().into()))
-    .collect::<HashMap<String, String>>();
+  let split: Vec<&str> = output.trim().split(" ").collect();
 
   SlopOutput {
-    x: out_map.get("X").unwrap().clone(),
-    y: out_map.get("Y").unwrap().clone(),
-    w: out_map.get("W").unwrap().clone(),
-    h: out_map.get("H").unwrap().clone(),
-    g: out_map.get("G").unwrap().clone(),
-    id: out_map.get("ID").unwrap().clone(),
-    cancel: out_map.get("Cancel").unwrap().clone() == "true",
+    x: split[0].to_string(),
+    y: split[1].to_string(),
+    w: split[2].to_string(),
+    h: split[3].to_string(),
+    g: split[4].to_string(),
+    id: split[5].to_string(),
+    cancel: false,
   }
 }
 
