@@ -31,7 +31,8 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
     audio: get_bool_value(matches, "audio", false),
-    video_format: get_video_format(matches)
+    video_format: get_video_format(matches),
+    verbose: matches.is_present("verbose"),
   };
 
   ensure_directory_exists(&PathBuf::from(&config.dir));
@@ -95,5 +96,6 @@ pub struct DropConfig {
 
   // CLI Only Options
   pub audio: bool,
-  pub video_format: String
+  pub video_format: String,
+  pub verbose: bool,
 }
