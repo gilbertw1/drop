@@ -60,4 +60,7 @@ pub fn create_drop_cli_app() -> App<'static,'static> {
          .value_name("AWS_BUCKET")
          .help("S3 Bucket to upload to")
          .takes_value(true))
+    .arg(Arg::with_name("verbose")
+         .long("verbose")
+         .help("Enables verbose logging"))
 }

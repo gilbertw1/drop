@@ -13,8 +13,8 @@ pub fn path_file_name(path: &Path) -> String {
   from_os_str(path.file_name().unwrap())
 }
 
-fn path_file_ext(path: &Path) -> String {
-  from_os_str(path.extension().unwrap())
+fn path_file_ext(path: &Path) -> Option<String> {
+  path.extension().map(|ext| from_os_str(ext))
 }
 
 fn path_file_stem(path: &Path) -> String {
@@ -41,11 +41,20 @@ pub fn gen_file(dir: String, ext: &str, len: usize) -> PathBuf {
 pub fn gen_filename_from_existing(file: &Path, strategy: String, len: usize) -> String {
   let file_base = path_file_stem(file);
   let file_ext = path_file_ext(file);
-  match strategy.as_ref() {
-    "exact" => format!("{}.{}", file_base, file_ext),
-    "append" => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
-    "replace" => format!("{}.{}", rand_string(len), file_ext),
-    _ => format!("{}-{}.{}", file_base, rand_string(len), file_ext),
+  if (file_ext.is_some()) {
+    match strategy.as_ref() {
+      "exact" => format!("{}.{}", file_base, file_ext.unwrap()),
+      "append" => format!("{}-{}.{}", file_base, rand_string(len), file_ext.unwrap()),
+      "replace" => format!("{}.{}", rand_string(len), file_ext.unwrap()),
+      _ => format!("{}-{}.{}", file_base, rand_string(len), file_ext.unwrap()),
+    }
+  } else {
+    match strategy.as_ref() {
+      "exact" => format!("{}", file_base),
+      "append" => format!("{}-{}", file_base, rand_string(len)),
+      "replace" => format!("{}", rand_string(len)),
+      _ => format!("{}-{}", file_base, rand_string(len)),
+    }
   }
 }
 
