@@ -57,6 +57,10 @@ Project home page: https://github.com/gilbertw1/drop
 : Length of unique string used to create filenames.
   [default 10]
 
+-t, --transparent *BOOL*
+: Enable transparent selection, compositor is required.
+  [default true]
+
 -V, --version
 : Prints version information
 

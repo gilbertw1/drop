@@ -1,4 +1,4 @@
 #!/bin/sh
 
 pandoc -s -t man drop.1.md -o drop.1
-sed -i 's/\.TH.*/.TH "rg" "1"/g' drop.1
+sed -i 's/\.TH.*/.TH "drop" "1"/g' drop.1

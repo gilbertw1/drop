@@ -53,13 +53,13 @@ fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
 
 fn take_screenshot_image(config: &DropConfig) -> PathBuf {
   let out_file = util::gen_file(config.dir.clone(), "png", config.unique_length);
-  screenshot::crop_and_take_screenshot(out_file.as_path());
+  screenshot::crop_and_take_screenshot(out_file.as_path(), config.transparent);
   out_file
 }
 
 fn take_screenshot_video(config: &DropConfig) -> PathBuf {
   let out_file = util::gen_file(config.dir.clone(), &config.video_format, config.unique_length);
-  screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config.audio);
+  screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config.audio, config.transparent);
   out_file
 }
 

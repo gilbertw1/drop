@@ -22,6 +22,8 @@ Dependencies
 Installation
 ------------
 
+### Source
+
 Clone this repo
 
     git clone git@github.com:gilbertw1/drop.git
@@ -38,6 +40,14 @@ Build drop:
 Run drop:
 
     ./target/release/drop
+    
+    
+### Arch Linux
+
+AUR - https://aur.archlinux.org/packages/drop
+
+    yaourt -S drop
+
 
 Usage
 -----

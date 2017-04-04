@@ -7,13 +7,13 @@ use std::path::Path;
 use libc::{kill, SIGTERM};
 use std::os::unix::io::{FromRawFd, AsRawFd};
 
-pub fn crop_and_take_screenshot(out_path: &Path) {
-  let slop_out = run_slop();
+pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
+  let slop_out = run_slop(transparent);
   crop_and_save_screenshot(&slop_out, out_path);
 }
 
-pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool) {
-  let slop_out = run_slop();
+pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
+  let slop_out = run_slop(transparent);
   let process =
     if video_format == "gif" {
       start_cropped_screencast_process_gif(&slop_out, out_path)
@@ -24,8 +24,13 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bo
   terminate_ffmpeg(process);
 }
 
-fn run_slop() -> SlopOutput {
-  let result = Command::new("slop").args(&["-l", "-c", "0.3,0.4,0.6,0.4", "-f", "%x %y %w %h %g %i"]).output().unwrap();
+fn run_slop(transparent: bool) -> SlopOutput {
+  let result =
+    if transparent {
+      Command::new("slop").args(&["-l", "-c", "0.3,0.4,0.6,0.4", "-f", "%x %y %w %h %g %i"]).output().unwrap()
+    } else {
+      Command::new("slop").args(&["-b", "5", "-c", "0.3,0.4,0.6,1", "-f", "%x %y %w %h %g %i"]).output().unwrap()
+    };
 
   if !result.status.success() {
     println!("Cancelled drop, exiting");
