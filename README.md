@@ -63,7 +63,7 @@ Comprehensive help can be accessed easily by using the ```-h``` flag.
 
 Drop can be used to take a screenshot and allows you to select a portion of the screen to save and upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once the screenshot has been saved and upload a notification will popup saying the screenshot has been upload and a url to the screenshot will be saved in the clipboard.
 
-    drop
+    drop -s
     
 
 ### Take a screencast
@@ -87,6 +87,24 @@ Drop can be used to upload a file to S3, resulting in a url to the uploaded file
 
     drop <file>
 
+By default drop will apply a randomly generated string to the filename, however this behavior can be overridden
+
+    drop --filename-strategy exact <file>
+
+
+### Create and upload file from stdin
+
+Drop can be used to create and upload a file from stdin when pass '-' as a filename
+
+    echo "Some Text" | drop -
+
+You can specify a extension to be applied to the created file
+
+    curl http://api.bryangilbert.com/profile | drop -e json -
+
+You can also specify a full filename to be used:
+
+    echo "<html><h1>Hello</h1></html>" | drop -f test.html --filename-strategy exact -
 
 Configuration
 -------------
@@ -103,6 +121,8 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
                                   #       append: Append unique string to filename
                                   #       exact: Don't alter filename when uploading
                                   #       replace: Replace filename with unique string
+    transparent = false           # Uses transparent overlay when selecting area of screen (default: false)
+                                  #  REQUIRES Compositor when set to true
 
     [aws]
     bucket = 'drop'               # S3 bucket to upload screenshots & files to (DEFAULT: empty)

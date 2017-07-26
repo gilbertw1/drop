@@ -4,11 +4,11 @@ drop - A simple screenshot, screencast, and file upload tool with S3 support
 
 # SYNOPSIS
 
-drop [*options*]
-
 drop [*options*] FILE
 
 drop [*options*] -v
+
+drop [*options*] -s
 
 drop [*options*] --help
 
@@ -40,6 +40,14 @@ Project home page: https://github.com/gilbertw1/drop
 : Secret used to authenticate with Amazon AWS
   [default: empty]
 
+-e, --extension *EXTENSION*
+: Override extension of resulting file
+  [default: empty]
+
+-f, --filename *FILENAME*
+: Override filename of resulting file
+  [default: empty]
+
 --filename-strategy *STRATEGY*
 : Strategy used to rename files when uploading to Amazon S3. Valid values are exact, 
   append, replace. Exact uses the exact filename, append will append a random string 
@@ -66,6 +74,9 @@ Project home page: https://github.com/gilbertw1/drop
 
 --verbose
 : Enables verbose logging
+
+-s, --screenshot
+: Capture screenshot
 
 -v, --video
 : Record video screencast

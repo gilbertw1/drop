@@ -8,11 +8,11 @@ drop \- A simple screenshot, screencast, and file upload tool with S3
 support
 .SH SYNOPSIS
 .PP
-drop [\f[I]options\f[]]
-.PP
 drop [\f[I]options\f[]] FILE
 .PP
 drop [\f[I]options\f[]] \-v
+.PP
+drop [\f[I]options\f[]] \-s
 .PP
 drop [\f[I]options\f[]] \-\-help
 .SH DESCRIPTION
@@ -43,6 +43,16 @@ Key used to authenticate with Amazon AWS [default: empty]
 .TP
 .B \-\-aws\-secret \f[I]SECRET\f[]
 Secret used to authenticate with Amazon AWS [default: empty]
+.RS
+.RE
+.TP
+.B \-e, \-\-extension \f[I]EXTENSION\f[]
+Override extension of resulting file [default: empty]
+.RS
+.RE
+.TP
+.B \-f, \-\-filename \f[I]FILENAME\f[]
+Override filename of resulting file [default: empty]
 .RS
 .RE
 .TP
@@ -86,6 +96,11 @@ Prints version information
 .TP
 .B \-\-verbose
 Enables verbose logging
+.RS
+.RE
+.TP
+.B \-s, \-\-screenshot
+Capture screenshot
 .RS
 .RE
 .TP

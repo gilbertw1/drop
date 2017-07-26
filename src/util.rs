@@ -35,7 +35,11 @@ pub fn create_drop_url(config: &DropConfig, filename: String) -> String {
 pub fn generate_filename(config: &DropConfig, recommended_filename: Option<String>, recommended_ext: Option<String>) -> String {
   let file_base = generate_filename_base(config, recommended_filename.clone());
   let file_ext = generate_filename_extension(config, recommended_filename, recommended_ext);
-  format!("{}.{}", file_base, file_ext)
+  if (file_ext.is_some()) {
+    format!("{}.{}", file_base, file_ext.unwrap())
+  } else {
+    file_base
+  }
 }
 
 fn generate_filename_base(config: &DropConfig, recommended_filename: Option<String>) -> String {
@@ -58,17 +62,17 @@ fn create_filename_base_from_existing(config: &DropConfig, filename: String) -> 
   }
 }
 
-fn generate_filename_extension(config: &DropConfig, recommended_file_name: Option<String>, recommended_ext: Option<String>) -> String {
+fn generate_filename_extension(config: &DropConfig, recommended_file_name: Option<String>, recommended_ext: Option<String>) -> Option<String> {
   if config.extension.is_some() {
-    config.extension.clone().unwrap()
+    config.extension.clone()
   } else if config.filename.is_some() {
-    config.filename.clone().unwrap().splitn(2, '.').nth(1).map(|s| s.to_string()).or(recommended_ext).unwrap()
+    config.filename.clone().unwrap().splitn(2, '.').nth(1).map(|s| s.to_string()).or(recommended_ext)
   } else if recommended_ext.is_some() {
-    recommended_ext.unwrap()
+    recommended_ext
   } else if recommended_file_name.is_some() {
-    recommended_file_name.unwrap().splitn(2, '.').nth(1).unwrap_or("").to_string()
+    recommended_file_name.unwrap().splitn(2, '.').nth(1).or(Some("")).map(|s| s.to_string())
   } else {
-    "".to_string()
+    None
   }
 }
 
