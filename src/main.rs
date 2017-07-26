@@ -6,6 +6,8 @@ extern crate libc;
 
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
+use std::io::{self, Read, Write};
+use std::fs::File;
 
 mod aws;
 mod clip;
@@ -19,18 +21,21 @@ mod ui;
 use conf::DropConfig;
 
 fn main() {
-  let cli_app = cli::create_drop_cli_app();
-  let matches = cli_app.get_matches();
+  
+  let mut cli_app = cli::create_drop_cli_app();
+  let matches = cli_app.clone().get_matches();
   let config = conf::load_config(&matches);
-
+  
   if matches.is_present("file") {
-    handle_file_upload(config, matches);
+    handle_file(config, &matches);
+  } else if matches.is_present("screenshot") || matches.is_present("video") {
+    handle_screenshot(config, &matches);
   } else {
-    handle_screenshot(config, matches)
+    cli_app.print_help();
   }
 }
 
-fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
+fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
   let out_file =
     if matches.is_present("video") {
       take_screenshot_video(&config)
@@ -52,31 +57,55 @@ fn handle_screenshot(config: DropConfig, matches: ArgMatches) {
 }
 
 fn take_screenshot_image(config: &DropConfig) -> PathBuf {
-  let out_file = util::gen_file(config.dir.clone(), "png", config.unique_length);
+  let out_file_name = util::generate_filename(config, None, Some("png".to_string()));
+  let out_file = Path::new(&config.dir).join(out_file_name);
   screenshot::crop_and_take_screenshot(out_file.as_path(), config.transparent);
   out_file
 }
 
 fn take_screenshot_video(config: &DropConfig) -> PathBuf {
-  let out_file = util::gen_file(config.dir.clone(), &config.video_format, config.unique_length);
+  let out_file_name = util::generate_filename(config, None, Some(config.video_format.clone()));
+  let out_file = Path::new(&config.dir).join(out_file_name);
   screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config.audio, config.transparent);
   out_file
 }
 
-fn handle_file_upload(config: DropConfig, matches: ArgMatches) {
-  let file = Path::new(matches.value_of("file").unwrap());
+fn handle_file(config: DropConfig, matches: &ArgMatches) {
+  let file = matches.value_of("file").unwrap();
+  if file == "-" {
+    handle_stdin(config, matches);
+  } else {
+    handle_file_upload(config, matches, Path::new(file));
+  }
+}
 
+fn handle_file_upload(config: DropConfig, matches: &ArgMatches, file: &Path) {
   if !file.exists() {
     println!("File does not exist! ({:?})", file);
     std::process::exit(1);
   } else if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
     println!("S3 not properly configured, not uploading file.")
   } else {
-    let filename = util::gen_filename_from_existing(file, config.filename_strategy.clone(), config.unique_length);
+    let filename = util::generate_filename(&config, file.file_name().map(|s| util::from_os_str(s)), None);
     aws::upload_file_to_s3(&config, &file, Some(filename.clone()));
     let url = util::create_drop_url(&config, filename.clone());
     clip::copy_to_clipboard(url.clone());
     notify::send_upload_notification(filename);
     println!("{}", url);
   }
+}
+
+fn handle_stdin(config: DropConfig, matches: &ArgMatches) {
+  let reader = io::stdin();
+  let mut buffer = Vec::new();
+  io::stdin().read_to_end(&mut buffer);
+  let out_filename = util::generate_filename(&config, None, None);
+  let path = Path::new(&config.dir).join(out_filename.clone());
+  let mut file = File::create(&path).unwrap();
+  file.write_all(&buffer);
+  aws::upload_file_to_s3(&config, &path, Some(out_filename.clone()));
+  let url = util::create_drop_url(&config, out_filename.clone());
+  clip::copy_to_clipboard(url.clone());
+  notify::send_upload_notification(out_filename.clone());
+  println!("{}", url);
 }

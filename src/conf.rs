@@ -30,7 +30,9 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy"))),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
-    transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(true)),
+    transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(false)),
+    filename: get_string_value(matches, "filename"),
+    extension: get_string_value(matches, "extension"),
     audio: get_bool_value(matches, "audio", false),
     video_format: get_video_format(matches),
     verbose: matches.is_present("verbose"),
@@ -95,6 +97,8 @@ pub struct DropConfig {
   pub filename_strategy: String,
   pub unique_length: usize,
   pub transparent: bool,
+  pub filename: Option<String>,
+  pub extension: Option<String>,
 
   // CLI Only Options
   pub audio: bool,

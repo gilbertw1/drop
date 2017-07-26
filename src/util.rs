@@ -21,7 +21,7 @@ fn path_file_stem(path: &Path) -> String {
   from_os_str(path.file_stem().unwrap())
 }
 
-fn from_os_str(os_str: &OsStr) -> String {
+pub fn from_os_str(os_str: &OsStr) -> String {
   os_str.to_string_lossy().into_owned()
 }
 
@@ -32,34 +32,52 @@ pub fn create_drop_url(config: &DropConfig, filename: String) -> String {
   }
 }
 
-pub fn gen_file(dir: String, ext: &str, len: usize) -> PathBuf {
-  let filename = gen_filename(ext, len);
-  let file_path = Path::new(&dir);
-  file_path.join(&filename)
+pub fn generate_filename(config: &DropConfig, recommended_filename: Option<String>, recommended_ext: Option<String>) -> String {
+  let file_base = generate_filename_base(config, recommended_filename.clone());
+  let file_ext = generate_filename_extension(config, recommended_filename, recommended_ext);
+  format!("{}.{}", file_base, file_ext)
 }
 
-pub fn gen_filename_from_existing(file: &Path, strategy: String, len: usize) -> String {
-  let file_base = path_file_stem(file);
-  let file_ext = path_file_ext(file);
-  if (file_ext.is_some()) {
-    match strategy.as_ref() {
-      "exact" => format!("{}.{}", file_base, file_ext.unwrap()),
-      "append" => format!("{}-{}.{}", file_base, rand_string(len), file_ext.unwrap()),
-      "replace" => format!("{}.{}", rand_string(len), file_ext.unwrap()),
-      _ => format!("{}-{}.{}", file_base, rand_string(len), file_ext.unwrap()),
-    }
+fn generate_filename_base(config: &DropConfig, recommended_filename: Option<String>) -> String {
+  if config.filename.is_some() {
+    create_filename_base_from_existing(config, config.filename.clone().unwrap())
+  } else if recommended_filename.is_some() {
+    create_filename_base_from_existing(config, recommended_filename.unwrap())
   } else {
-    match strategy.as_ref() {
-      "exact" => format!("{}", file_base),
-      "append" => format!("{}-{}", file_base, rand_string(len)),
-      "replace" => format!("{}", rand_string(len)),
-      _ => format!("{}-{}", file_base, rand_string(len)),
-    }
+    rand_string(config.unique_length)
+  }
+}
+
+fn create_filename_base_from_existing(config: &DropConfig, filename: String) -> String {
+  let file_base = filename.splitn(2, '.').next().unwrap();
+  match config.filename_strategy.as_ref() {
+    "exact" => file_base.to_string(),
+    "append" => append_rand_string(file_base, config.unique_length),
+    "replace" => rand_string(config.unique_length),
+    _ => append_rand_string(file_base, config.unique_length),
+  }
+}
+
+fn generate_filename_extension(config: &DropConfig, recommended_file_name: Option<String>, recommended_ext: Option<String>) -> String {
+  if config.extension.is_some() {
+    config.extension.clone().unwrap()
+  } else if config.filename.is_some() {
+    config.filename.clone().unwrap().splitn(2, '.').nth(1).map(|s| s.to_string()).or(recommended_ext).unwrap()
+  } else if recommended_ext.is_some() {
+    recommended_ext.unwrap()
+  } else if recommended_file_name.is_some() {
+    recommended_file_name.unwrap().splitn(2, '.').nth(1).unwrap_or("").to_string()
+  } else {
+    "".to_string()
   }
 }
 
 fn gen_filename(ext: &str, len: usize) -> String {
   format!("{}.{}", rand_string(len), ext)
+}
+
+fn append_rand_string(value: &str, len: usize) -> String {
+  format!("{}-{}", value, rand_string(len))
 }
 
 fn rand_string(len: usize) -> String {
