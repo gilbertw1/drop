@@ -58,7 +58,7 @@ fn create_filename_base_from_existing(config: &DropConfig, filename: String) -> 
     "exact" => file_base.to_string(),
     "append" => append_rand_string(file_base, config.unique_length),
     "replace" => rand_string(config.unique_length),
-    _ => append_rand_string(file_base, config.unique_length),
+    _ => prepend_rand_string(file_base, config.unique_length),
   }
 }
 
@@ -76,12 +76,12 @@ fn generate_filename_extension(config: &DropConfig, recommended_file_name: Optio
   }
 }
 
-fn gen_filename(ext: &str, len: usize) -> String {
-  format!("{}.{}", rand_string(len), ext)
+fn prepend_rand_string(value: &str, len: usize) -> String {
+  format!("{}--{}", rand_string(len), value)
 }
 
 fn append_rand_string(value: &str, len: usize) -> String {
-  format!("{}-{}", value, rand_string(len))
+  format!("{}--{}", value, rand_string(len))
 }
 
 fn rand_string(len: usize) -> String {

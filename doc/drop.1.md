@@ -51,8 +51,9 @@ Project home page: https://github.com/gilbertw1/drop
 --filename-strategy *STRATEGY*
 : Strategy used to rename files when uploading to Amazon S3. Valid values are exact, 
   append, replace. Exact uses the exact filename, append will append a random string 
-  to the end, and replace will replace the filename with a random string
-  [default: append]
+  to the end, prepend will prepend a random string, and replace will replace the filename
+  with a random string
+  [default: prepend]
 
 -h, --help
 : Prints help information

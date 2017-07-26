@@ -47,7 +47,7 @@ pub fn create_drop_cli_app() -> App<'static,'static> {
          .long("filename-strategy")
          .value_name("STRATEGY")
          .help("File upload naming strategy")
-         .possible_values(&["exact", "append", "replace"])
+         .possible_values(&["exact", "append", "prepend", "replace"])
          .takes_value(true))
     .arg(Arg::with_name("transparent")
          .long("transparent")

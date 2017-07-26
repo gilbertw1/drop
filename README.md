@@ -116,9 +116,10 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
     dir = '~/.drop'               # Directory used to save screenshots (DEFAULT: ~/.drop)
     host = ''                     # Custom domain used to generate screenshot links (DEFAULT: empty)
     unique_length = 10            # Length of unique string used in creating filenames (DEFAULT: 10)
-    filename_strategy = 'append'  # Naming strategy to use when uploading file (DEFAULT: APPEND)
+    filename_strategy = 'prepend' # Naming strategy to use when uploading file (DEFAULT: PREPEND)
                                   #   VALUES:           
                                   #       append: Append unique string to filename
+                                  #       prepend: Prepend unique string to filename
                                   #       exact: Don't alter filename when uploading
                                   #       replace: Replace filename with unique string
     transparent = false           # Uses transparent overlay when selecting area of screen (default: false)

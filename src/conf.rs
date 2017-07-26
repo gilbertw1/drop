@@ -44,11 +44,12 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
 
 fn extract_strategy(strat: Option<String>) -> String {
   if strat.is_none() {
-    "append".to_string()
+    "prepend".to_string()
   } else {
     let strat = strat.unwrap();
-    if strat.to_lowercase() == "exact" || strat.to_lowercase() == "append" || strat.to_lowercase() == "replace" {
-      strat.to_lowercase()
+    if strat.to_lowercase() == "exact" || strat.to_lowercase() == "append" ||
+      strat.to_lowercase() == "replace" || strat.to_lowercase() == "prepend" {
+        strat.to_lowercase()
     } else {
       panic!(format!("Unrecognized filename strategy: {}", strat))
     }
