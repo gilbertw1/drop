@@ -7,7 +7,7 @@ A simple screenshot, screencast, and file upload tool with S3 support written in
 Dependencies
 ------------
 
-*Requrired*
+*Required*
 
 * s3cmd - http://s3tools.org/s3cmd
 * xsel - http://www.vergenet.net/%7Econrad/software/xsel/
