@@ -1,8 +1,9 @@
 extern crate config;
 extern crate rand;
 extern crate clap;
-extern crate gtk;
 extern crate libc;
+#[cfg(target_os = "linux")]
+extern crate gtk;
 
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;

@@ -7,11 +7,25 @@ use std::path::Path;
 use libc::{kill, SIGTERM};
 use std::os::unix::io::{FromRawFd, AsRawFd};
 
+
+#[cfg(target_os = "macos")]
+pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
+  let result =
+    Command::new("screencapture").args(&["-s", &out_path.to_string_lossy().into_owned()]).output().unwrap();
+
+  if !result.status.success() {
+    println!("Cancelling drop, exiting");
+    std::process::exit(1);
+  }
+}
+
+#[cfg(target_os = "linux")]
 pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
   let slop_out = run_slop(transparent);
   crop_and_save_screenshot(&slop_out, out_path);
 }
 
+#[cfg(target_os = "linux")]
 pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
   let slop_out = run_slop(transparent);
   let process =
@@ -22,6 +36,13 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bo
     };
   ui::gtk_stop_recording_popup();
   terminate_ffmpeg(process);
+}
+
+
+#[cfg(target_os = "macos")]
+pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
+  println!("Recording video screencast not supported on MacOS yet.");
+  std::process::exit(1);
 }
 
 fn run_slop(transparent: bool) -> SlopOutput {

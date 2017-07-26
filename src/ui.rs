@@ -1,7 +1,10 @@
 use std;
+#[cfg(target_os = "linux")]
 use gtk;
+#[cfg(target_os = "linux")]
 use gtk::prelude::*;
 
+#[cfg(target_os = "linux")]
 pub fn gtk_stop_recording_popup() {
   if gtk::init().is_err() {
     println!("Failed to initialize GTK.");

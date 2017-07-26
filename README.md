@@ -7,6 +7,8 @@ A simple screenshot, screencast, and file upload tool with S3 support written in
 Dependencies
 ------------
 
+### Linux
+
 *Required*
 
 * s3cmd - http://s3tools.org/s3cmd
@@ -17,6 +19,12 @@ Dependencies
 * slop (screenshot + screencast) - https://github.com/naelstrof/slop
 * imagemagick (screenshot) - https://www.imagemagick.org
 * ffmpeg (screencast) - https://ffmpeg.org
+
+### MacOS
+
+*Required*
+
+* s3cmd - http://s3tools.org/s3cmd
 
 
 Installation
@@ -66,7 +74,7 @@ Drop can be used to take a screenshot and allows you to select a portion of the 
     drop -s
     
 
-### Take a screencast
+### Take a screencast (Not available for MacOS)
 
 Drop can be used to take a screencast. This behaves identically to taking a screenshot except it records a video. A small button to stop the recording will appear in the top left of the screen.
 
@@ -170,6 +178,6 @@ In order for Drop to work correctly with a custom domain, a few additional steps
 Roadmap
 -------
 * Better error handling
-* Add support for OSX
+* Add support screencasts on OSX
 * Reduce non-rust dependencies
 * Add support for uploading to more services than just S3
