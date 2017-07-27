@@ -56,6 +56,11 @@ AUR - https://aur.archlinux.org/packages/drop
 
     yaourt -S drop
 
+### MacOS
+
+HomeBrew - https://github.com/gilbertw1/homebrew-drop
+
+    brew install gilbertw1/drop/drop
 
 Usage
 -----
