@@ -15,21 +15,21 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
   let conf_file = home_dir.join(".config/drop/config.toml");
 
   if !conf_file.exists() {
-    create_default_config_File(&conf_file)
+    create_default_config_file(&conf_file)
   }
 
   let mut conf = Config::new();
   conf.merge(config::File::new(&util::path_to_str(&conf_file), config::FileFormat::Toml)).unwrap();
 
   let config = DropConfig {
-    dir: conf.get_str("drop.dir").unwrap_or("~/.drop".to_string()).replace("~", &home_dir.to_string_lossy().into_owned()),
-    host: none_if_empty(get_string_value(matches, "host").or(conf.get_str("drop.host"))),
-    aws_bucket: get_string_value(matches, "aws-bucket").or(conf.get_str("aws.bucket")),
-    aws_key: get_string_value(matches, "aws-key").or(conf.get_str("aws.key")),
-    aws_secret: get_string_value(matches, "aws-secret").or(conf.get_str("aws.secret")),
-    filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy"))),
+    dir: conf.get_str("drop.dir").ok().unwrap_or("~/.drop".to_string()).replace("~", &home_dir.to_string_lossy().into_owned()),
+    host: none_if_empty(get_string_value(matches, "host").or(conf.get_str("drop.host").ok())),
+    aws_bucket: get_string_value(matches, "aws-bucket").or(conf.get_str("aws.bucket").ok()),
+    aws_key: get_string_value(matches, "aws-key").or(conf.get_str("aws.key").ok()),
+    aws_secret: get_string_value(matches, "aws-secret").or(conf.get_str("aws.secret").ok()),
+    filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy").ok())),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
-      .or(conf.get_int("drop.unique_length").map(|i| i as usize)) .unwrap_or(10),
+      .or(conf.get_int("drop.unique_length").ok().map(|i| i as usize)) .unwrap_or(10),
     transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(false)),
     filename: get_string_value(matches, "filename"),
     extension: get_string_value(matches, "extension"),
@@ -82,7 +82,7 @@ fn ensure_directory_exists(dir: &PathBuf) {
   std::fs::create_dir_all(dir);
 }
 
-fn create_default_config_File(config_file_path: &PathBuf) {
+fn create_default_config_file(config_file_path: &PathBuf) {
   ensure_directory_exists(&config_file_path.parent().unwrap().to_path_buf());
   let mut file = File::create(config_file_path).unwrap();
   file.write_all(DEFAULT_CONFIG.as_bytes());

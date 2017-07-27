@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use rand;
 use rand::Rng;
 use std::ffi::OsStr;
@@ -11,14 +11,6 @@ pub fn path_to_str(path: &Path) -> String {
 
 pub fn path_file_name(path: &Path) -> String {
   from_os_str(path.file_name().unwrap())
-}
-
-fn path_file_ext(path: &Path) -> Option<String> {
-  path.extension().map(|ext| from_os_str(ext))
-}
-
-fn path_file_stem(path: &Path) -> String {
-  from_os_str(path.file_stem().unwrap())
 }
 
 pub fn from_os_str(os_str: &OsStr) -> String {
@@ -35,7 +27,7 @@ pub fn create_drop_url(config: &DropConfig, filename: String) -> String {
 pub fn generate_filename(config: &DropConfig, recommended_filename: Option<String>, recommended_ext: Option<String>) -> String {
   let file_base = generate_filename_base(config, recommended_filename.clone());
   let file_ext = generate_filename_extension(config, recommended_filename, recommended_ext);
-  if (file_ext.is_some()) {
+  if file_ext.is_some() {
     format!("{}.{}", file_base, file_ext.unwrap())
   } else {
     file_base

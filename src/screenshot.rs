@@ -1,11 +1,9 @@
-#![feature(libc)]
 use ui;
 use std;
 use std::process::{Command, Stdio, Child};
-use std::collections::HashMap;
 use std::path::Path;
-use libc::{kill, SIGTERM};
-use std::os::unix::io::{FromRawFd, AsRawFd};
+use nix::sys::signal::{kill, Signal};
+use nix::unistd::Pid;
 
 
 #[cfg(target_os = "macos")]
@@ -122,9 +120,7 @@ fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path) 
 
 fn terminate_ffmpeg(mut child: Child) {
   let child_id = child.id();
-  unsafe {
-    kill(child_id as i32, SIGTERM);
-  }
+  kill(Pid::from_raw(child_id as i32), Signal::SIGTERM);
   child.wait();
 }
 

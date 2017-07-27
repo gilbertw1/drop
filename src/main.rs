@@ -1,7 +1,7 @@
 extern crate config;
 extern crate rand;
 extern crate clap;
-extern crate libc;
+extern crate nix;
 #[cfg(target_os = "linux")]
 extern crate gtk;
 
@@ -74,13 +74,13 @@ fn take_screenshot_video(config: &DropConfig) -> PathBuf {
 fn handle_file(config: DropConfig, matches: &ArgMatches) {
   let file = matches.value_of("file").unwrap();
   if file == "-" {
-    handle_stdin(config, matches);
+    handle_stdin(config);
   } else {
-    handle_file_upload(config, matches, Path::new(file));
+    handle_file_upload(config, Path::new(file));
   }
 }
 
-fn handle_file_upload(config: DropConfig, matches: &ArgMatches, file: &Path) {
+fn handle_file_upload(config: DropConfig, file: &Path) {
   if !file.exists() {
     println!("File does not exist! ({:?})", file);
     std::process::exit(1);
@@ -96,8 +96,7 @@ fn handle_file_upload(config: DropConfig, matches: &ArgMatches, file: &Path) {
   }
 }
 
-fn handle_stdin(config: DropConfig, matches: &ArgMatches) {
-  let reader = io::stdin();
+fn handle_stdin(config: DropConfig) {
   let mut buffer = Vec::new();
   io::stdin().read_to_end(&mut buffer);
   let out_filename = util::generate_filename(&config, None, None);
