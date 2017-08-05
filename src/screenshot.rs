@@ -1,10 +1,31 @@
 use ui;
 use std;
 use std::process::{Command, Stdio, Child};
+use std::ptr::null;
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
+use std::{thread, time};
 
+#[cfg(target_os = "macos")]
+use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
+#[cfg(target_os = "macos")]
+use objc::declare::ClassDecl;
+#[cfg(target_os = "macos")]
+use cocoa::appkit::{NSApp, NSApplication, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular};
+#[cfg(target_os = "macos")]
+use cocoa::base::{selector, nil};
+#[cfg(target_os = "macos")]
+use cocoa::foundation::{NSProcessInfo, NSAutoreleasePool, NSString};
+use std::ffi::CString;
+
+#[cfg(target_os = "macos")]
+pub type Id = *mut Object;
+
+#[cfg(target_os = "macos")]
+extern {
+  fn CGMainDisplayID() -> u32;
+}
 
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
@@ -39,8 +60,89 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bo
 
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
-  println!("Recording video screencast not supported on MacOS yet.");
-  std::process::exit(1);
+  let capture_session = create_and_initiate_macos_caputure_session(out_path, audio);
+  create_status_bar_menu_and_wait_for_stop();
+  end_macos_capture_session(capture_session);
+}
+
+#[cfg(target_os = "macos")]
+fn create_and_initiate_macos_caputure_session(out_path: &Path, audio: bool) -> MacOSAVCaptureSession {
+  unsafe {
+    let AVCaptureSession = Class::get("AVCaptureSession").unwrap();
+    let session: Id = msg_send![AVCaptureSession, alloc];
+    let session: Id = msg_send![session, init];
+
+    let AVCaptureScreenInput = Class::get("AVCaptureScreenInput").unwrap();
+    let input: Id = msg_send![AVCaptureScreenInput, alloc];
+    let input: Id = msg_send![input, initWithDisplayID: CGMainDisplayID()];
+    let input: Id = msg_send![input, autorelease];
+
+    let AVCaptureMovieFileOutput = Class::get("AVCaptureMovieFileOutput").unwrap();
+    let output: Id = msg_send![AVCaptureMovieFileOutput, alloc];
+    let output: Id = msg_send![output, init];
+    let output: Id = msg_send![output, autorelease];
+
+    msg_send![session, addInput:input];
+    msg_send![session, addOutput:output];
+    msg_send![session, startRunning];
+
+    let NSUrl = Class::get("NSURL").unwrap();
+    let rawUrl = to_ns_string(out_path.to_string_lossy().into_owned());
+    let destUrl: Id = msg_send![NSUrl, fileURLWithPath:rawUrl];
+    msg_send![output, startRecordingToOutputFileURL:destUrl recordingDelegate:session];
+
+    MacOSAVCaptureSession {
+      session: session,
+      input: input,
+      output: output
+    }
+  }
+}
+
+#[cfg(target_os = "macos")]
+fn end_macos_capture_session(session: MacOSAVCaptureSession) {
+  unsafe {
+    msg_send![session.output, stopRecording];
+    msg_send![session.session, stopRunning];
+  }
+}
+
+#[cfg(target_os = "macos")]
+fn create_status_bar_menu_and_wait_for_stop() {
+  unsafe {
+    let _pool = NSAutoreleasePool::new(nil);
+    let app = NSApp();
+    app.setActivationPolicy_(NSApplicationActivationPolicyRegular);
+
+    let sbar = NSStatusBar::systemStatusBar(nil);
+
+    let sbar_item = sbar.statusItemWithLength_(NSVariableStatusItemLength);
+    msg_send![sbar_item.button(), setTitle:NSString::alloc(nil).init_str("DROP")];
+    msg_send![sbar_item.button(), setHighlighted:YES];
+
+    let sbar_menu = NSMenu::new(nil).autorelease();
+    let stop_prefix = NSString::alloc(nil).init_str("Stop Recording");
+    let stop_title = stop_prefix.stringByAppendingString_(NSProcessInfo::processInfo(nil).processName());
+    let stop_action = selector("stop:");
+    let stop_key = NSString::alloc(nil).init_str("q");
+    let stop_item = NSMenuItem::alloc(nil)
+      .initWithTitle_action_keyEquivalent_(stop_title, stop_action, stop_key)
+      .autorelease();
+
+    sbar_menu.addItem_(stop_item);
+    sbar_item.setMenu_(sbar_menu);
+
+    app.run();
+  }
+}
+
+#[cfg(target_os = "macos")]
+fn to_ns_string(str: String) -> Id {
+  unsafe {
+    let value = CString::new(str).unwrap();
+    let NSString = Class::get("NSString").unwrap();
+    msg_send![NSString, stringWithUTF8String:value.as_ptr()]
+  }
 }
 
 fn run_slop(transparent: bool) -> SlopOutput {
@@ -133,4 +235,12 @@ struct SlopOutput {
   g: String,
   id: String,
   cancel: bool,
+}
+
+#[cfg(target_os = "macos")]
+#[derive(Debug)]
+struct MacOSAVCaptureSession {
+  session: Id,
+  input: Id,
+  output: Id
 }

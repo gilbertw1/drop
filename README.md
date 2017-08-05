@@ -44,6 +44,10 @@ Optionally place ```config.toml.default``` in ```~/.config/drop/config.toml``` a
 Build drop:
 
     cargo build --release
+
+Build for MacOS:
+
+    cargo rustc -- -l framework=AVFoundation -l framework=Foundation -l framework=CoreGraphics
   
 Run drop:
 
@@ -79,7 +83,7 @@ Drop can be used to take a screenshot and allows you to select a portion of the 
     drop -s
     
 
-### Take a screencast (Not available for MacOS)
+### Take a screencast
 
 Drop can be used to take a screencast. This behaves identically to taking a screenshot except it records a video. A small button to stop the recording will appear in the top left of the screen.
 
@@ -183,6 +187,6 @@ In order for Drop to work correctly with a custom domain, a few additional steps
 Roadmap
 -------
 * Better error handling
-* Add support screencasts on OSX
+* Add support for selecting portion of screen when screencasting on MacOS
 * Reduce non-rust dependencies
 * Add support for uploading to more services than just S3

@@ -2,8 +2,15 @@ extern crate config;
 extern crate rand;
 extern crate clap;
 extern crate nix;
+
 #[cfg(target_os = "linux")]
 extern crate gtk;
+
+#[cfg(target_os = "macos")]
+#[macro_use] extern crate objc;
+
+#[cfg(target_os = "macos")]
+extern crate cocoa;
 
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
