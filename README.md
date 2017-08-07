@@ -47,7 +47,7 @@ Build drop:
 
 Build for MacOS:
 
-    cargo rustc -- -l framework=AVFoundation -l framework=Foundation -l framework=CoreGraphics
+    cargo rustc -- -l framework=AVFoundation -l framework=Foundation -l framework=CoreGraphics -l framework=CoreAnimation
   
 Run drop:
 

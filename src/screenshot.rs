@@ -1,18 +1,16 @@
 use ui;
 use std;
 use std::process::{Command, Stdio, Child};
-use std::ptr::null;
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
-use std::{thread, time};
 
 #[cfg(target_os = "macos")]
 use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
 #[cfg(target_os = "macos")]
 use objc::declare::ClassDecl;
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSApp, NSApplication, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular};
+use cocoa::appkit::{NSApp, NSApplication, NSView, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular};
 #[cfg(target_os = "macos")]
 use cocoa::base::{selector, nil};
 #[cfg(target_os = "macos")]
@@ -24,7 +22,14 @@ pub type Id = *mut Object;
 
 #[cfg(target_os = "macos")]
 extern {
+  fn fabs(x: f64) -> f64;
+  fn min(x: f64, y: f64) -> f64;
   fn CGMainDisplayID() -> u32;
+  fn CGRectMake(x: f64, y: f64, width: f64, height: f64) -> Id;
+  fn CGPathCreateMutable() -> Id;
+  fn CGPathMoveToPoint(path: Id, transform: Id, x: f64, y: f64);
+  fn CGPathAddLineToPoint(path: Id, transform: Id, x: f64, y: f64);
+  fn CGPathCloseSubpath(path: Id);
 }
 
 #[cfg(target_os = "macos")]
@@ -242,5 +247,162 @@ struct SlopOutput {
 struct MacOSAVCaptureSession {
   session: Id,
   input: Id,
-  output: Id
+  output: Id,
+}
+
+#[cfg(target_os = "macos")]
+struct CroppingView {
+  super_: cocoa::NSView,
+  clicked_point: Id,
+  shape_layer: Id,
+}
+
+#[cfg(target_os = "macos")]
+impl cocoa::Object for CroppingView {
+  type Super = cocoa::NSView;
+
+  fn super_ref(&self) -> &Self::Super {
+    &self.super_
+  }
+}
+
+#[cfg(target_os = "macos")]
+fn register_macos_cropping_view() {
+  unsafe {
+    let NSObject = Class::get("NSView").unwrap();
+    let mut decl = ClassDecl::new("CroppingView", NSObject).unwrap();
+    decl.add_ivar::<Id>("_clickedPoint");
+    decl.add_ivar::<Id>("_shapeLayer");
+
+    extern fn impl_init(self_: &mut AnyObject, sel: Sel) {
+      unsafe {
+        let CALayer = Class::get("CALayer").unwrap();
+        let layer: Id = msg_send![CALayer, alloc];
+        let layer: Id = msg_send![layer, init];
+
+        let super_view = NSView::init();
+        super_view.setLayer(layer);
+        super_view.setWantsLayer(YES);
+
+        let NSColor = Class::get("NSColor").unwrap();
+        let black_color: Id = msg_send![NSColor, blackColor];
+        let black_cgcolor: Id = msg_send![black_color, CGColor];
+        let clear_color: Id = msg_send![NSColor, clearColor];
+        let clear_cgcolor: Id = msg_send![clear_color, CGColor];
+
+        let CAShapeLayer = Class::get("CAShapeLayer").unwrap();
+        let shape_layer: Id = msg_send![CAShapeLayer, alloc];
+        let shape_layer: Id = msg_send![shape_layer, init];
+        msg_send![shape_layer, setLineWidth:1.0 as f64];
+        msg_send![shape_layer, setStrokeColor: black_cgcolor];
+        msg_send![shape_layer, setFillColor: clear_cgcolor];
+      }
+    }
+  }
+}
+
+#[cfg(target_os = "macos")]
+impl CroppingView {
+  fn new() -> Self {
+    unsafe {
+      let CALayer = Class::get("CALayer").unwrap();
+      let layer: Id = msg_send![CALayer, alloc];
+      let layer: Id = msg_send![layer, init];
+
+      let super_view = NSView::init();
+      super_view.setLayer(layer);
+      super_view.setWantsLayer(YES);
+
+      let NSColor = Class::get("NSColor").unwrap();
+      let black_color: Id = msg_send![NSColor, blackColor];
+      let black_cgcolor: Id = msg_send![black_color, CGColor];
+      let clear_color: Id = msg_send![NSColor, clearColor];
+      let clear_cgcolor: Id = msg_send![clear_color, CGColor];
+
+      let CAShapeLayer = Class::get("CAShapeLayer").unwrap();
+      let shape_layer: Id = msg_send![CAShapeLayer, alloc];
+      let shape_layer: Id = msg_send![shape_layer, init];
+      msg_send![shape_layer, setLineWidth:1.0 as f64];
+      msg_send![shape_layer, setStrokeColor: black_cgcolor];
+      msg_send![shape_layer, setFillColor: clear_cgcolor];
+
+      CroppingView {
+        super_: super_view,
+        clicked_point: nil,
+        shape_layer: shape_layer
+      }
+    }
+  }
+
+  fn mouse_down(&self, event: Id) {
+    unsafe {
+      let location_in_window: Id = msg_send![event, locationInWindow];
+      let clicked_point: Id = msg_send![self.super_, convertPoint:location_in_window fromView: nil];
+      let layer = self.super_.layer();
+      msg_send![layer, addSublayer:self.shape_layer];
+    }
+  }
+
+  fn mouse_up(&self, event: Id) {
+    unsafe {
+      let location_in_window: Id = msg_send![event, locationInWindow];
+      let point: Id = msg_send![self.super_, convertPoint:location_in_window fromView: nil];
+      let point_x: f64 = msg_send![point, x];
+      let point_y: f64 = msg_send![point, y];
+      let clicked_point: Id = self.clicked_point;
+      let clicked_point_x: f64 = msg_send![clicked_point, x];
+      let clicked_point_y: f64 = msg_send![clicked_point, y];
+      let x = min(point_x, clicked_point_x);
+      let y = min(point_y, clicked_point_y);
+      let width = fabs(point_x - clicked_point_x);
+      let height = fabs(point_y - clicked_point_y);
+      let selected_rect = CGRectMake(x, y, width, height);
+      // TODO: GET THIS VALUE OUT! (selected_rect)
+    }
+  }
+
+  fn mouse_dragged(&self, event: Id) {
+    unsafe {
+      let point: Id = msg_send![self.super_, convertPoint:location_in_window fromView: nil];
+      let point_x: f64 = msg_send![point, x];
+      let point_y: f64 = msg_send![point, y];
+      let clicked_point: Id = self.clicked_point;
+      let clicked_point_x: f64 = msg_send![clicked_point, x];
+      let clicked_point_y: f64 = msg_send![clicked_point, y];
+
+      let path = CGPathCreateMutable();
+      CGPathMoveToPoint(path, nil, clicked_point_x, clicked_point_y);
+      CGPathAddLineToPoint(path, nil, clicked_point_x, point_y);
+      CGPathAddLineToPoint(path, nil, point_x, point_y);
+      CGPathAddLineToPoint(path, nil, point_x, clicked_point_y);
+      CGPathCloseSubpath(path);
+
+      msg_send![self.shape_layer, setPath: path];
+    }
+  }
+}
+
+fn register_cropping_view() {
+  let NSView = Class::get("NSView").unwrap();
+}
+
+#[cfg(target_os = "macos")]
+struct CroppingWindow {
+  super_: cocoa::NSWindow
+}
+
+#[cfg(target_os = "macos")]
+impl cocoa::Object for CroppingWindow {
+  type Super = cocoa::NSWindow;
+
+  fn super_ref(&self) -> &Self::Super {
+    &self.super_
+  }
+}
+
+#[cfg(target_os = "macos")]
+impl CroppingWindow {
+  fn new() -> Self {
+    
+  }
 }
