@@ -85,11 +85,11 @@ Drop can be used to take a screencast. This behaves identically to taking a scre
 
     drop -v
 
-Optionally include audio (off by default)
+Optionally include audio (off by default, Linux only) 
 
     drop -v -a true
     
-Create screencast as a gif:
+Create screencast as a gif (Linux Only)
 
     drop -v --video-format gif
     
@@ -117,16 +117,16 @@ You can specify a extension to be applied to the created file
 
 You can also specify a full filename to be used:
 
-    echo "<html><h1>Hello</h1></html>" | drop -f test.html --filename-strategy exact -
+    echo "<html><h1>Hello</h1></html>" | drop -f index.html --filename-strategy exact -
 
 Configuration
 -------------
 
-The drop configuration file should be placed at ```~/.config/drop/config.toml```. It's values are as follows:
+The drop configuration file should be placed at ```~/.config/drop/config.toml```. If one doesn't exist, it will be created the first time drop is run. It's values are as follows:
 
 ```toml
     [drop]
-    dir = '~/.drop'               # Directory used to save screenshots (DEFAULT: ~/.drop)
+    dir = '~/.drop'               # Directory used to save generated files (DEFAULT: ~/.drop)
     host = ''                     # Custom domain used to generate screenshot links (DEFAULT: empty)
     unique_length = 10            # Length of unique string used in creating filenames (DEFAULT: 10)
     filename_strategy = 'prepend' # Naming strategy to use when uploading file (DEFAULT: PREPEND)
@@ -173,7 +173,9 @@ In order for Drop to work correctly with a custom domain, a few additional steps
 
 * Create an S3 bucket with the name of the custom domain. For example if I want my drops available at ```drop.mydomain.com```, then the S3 bucket I create needs to be named ```drop.mydomain.com```.
 
-* Enable static website hosting for the bucket. This can be done by selecting the bucket and checking "Enable website hosting" under the "Static Website Hosting" section in the bucket properties. Note that you will need at least a blank html file in the bucket to select as the required 'Index Document'.
+* Enable static website hosting for the bucket. This can be done by selecting the bucket and checking "Enable website hosting" under the "Static Website Hosting" section in the bucket properties. Note that you will need at least a blank html file in the bucket to select as the required 'Index Document'. A simple blank index document can be created and upload using the following drop command: 
+
+    echo "<html></html>" | drop -f index.html --filename-strategy exact -
 
 * Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in the "Static Website Hosting" properties section). In the above example, in the DNS settings for ```mydomain.com```, a cname entry for ```drop``` would be added pointing to the static S3 site.
 
@@ -185,4 +187,4 @@ Roadmap
 * Better error handling
 * Add support for selecting portion of screen when screencasting on MacOS
 * Reduce non-rust dependencies
-* Add support for uploading to more services than just S3
+* Add support for uploading to more remote backends than just S3
