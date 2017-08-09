@@ -44,10 +44,6 @@ Optionally place ```config.toml.default``` in ```~/.config/drop/config.toml``` a
 Build drop:
 
     cargo build --release
-
-Build for MacOS:
-
-    cargo rustc -- -l framework=AVFoundation -l framework=Foundation -l framework=CoreGraphics
   
 Run drop:
 

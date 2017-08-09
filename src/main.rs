@@ -12,6 +12,23 @@ extern crate gtk;
 #[cfg(target_os = "macos")]
 extern crate cocoa;
 
+#[cfg(target_os = "macos")]
+#[link(name = "Cocoa", kind = "framework")]
+extern { }
+
+#[cfg(target_os = "macos")]
+#[link(name = "Foundation", kind = "framework")]
+extern { }
+
+#[cfg(target_os = "macos")]
+#[link(name = "AVFoundation", kind = "framework")]
+extern { }
+
+#[cfg(target_os = "macos")]
+#[link(name = "CoreGraphics", kind = "framework")]
+extern { }
+
+
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
 use std::io::{self, Read, Write};
