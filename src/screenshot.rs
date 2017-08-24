@@ -1,11 +1,11 @@
 use ui;
 use std;
 use std::process::{Command, Stdio, Child};
-use std::ptr::null;
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
-use std::{thread, time};
+
+use conf::DropConfig;
 
 #[cfg(target_os = "macos")]
 use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
@@ -17,7 +17,6 @@ use cocoa::appkit::{NSApp, NSApplication, NSMenu, NSMenuItem, NSStatusBar, NSSta
 use cocoa::base::{selector, nil};
 #[cfg(target_os = "macos")]
 use cocoa::foundation::{NSProcessInfo, NSAutoreleasePool, NSString};
-use std::ffi::CString;
 
 #[cfg(target_os = "macos")]
 pub type Id = *mut Object;
@@ -45,13 +44,13 @@ pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
 }
 
 #[cfg(target_os = "linux")]
-pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
-  let slop_out = run_slop(transparent);
+pub fn crop_and_take_screencast(out_path: &Path, video_format: String, config: &DropConfig) {
+  let slop_out = run_slop(config.transparent);
   let process =
     if video_format == "gif" {
-      start_cropped_screencast_process_gif(&slop_out, out_path)
+      start_cropped_screencast_process_gif(&slop_out, out_path, config.verbose)
     } else {
-      start_cropped_screencast_process(&slop_out, out_path, audio)
+      start_cropped_screencast_process(&slop_out, out_path, config.audio, config.verbose)
     };
   ui::gtk_stop_recording_popup();
   terminate_ffmpeg(process);
@@ -182,7 +181,7 @@ fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path) {
     .spawn().unwrap().wait();
 }
 
-fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audio: bool) -> Child {
+fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audio: bool, verbose: bool) -> Child {
   let mut cmd = Command::new("ffmpeg");
   cmd.args(&["-f", "x11grab",
              "-s", &format!("{}x{}", slop_out.w, slop_out.h),
@@ -206,18 +205,25 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audi
   }
 
   cmd.arg(&out_path.to_string_lossy().into_owned());
-  cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
+
+  if verbose {
+    cmd.spawn().unwrap()
+  } else {
+    cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
+  }
 }
 
-fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path) -> Child {
-    Command::new("ffmpeg")
-    .args(&["-f", "x11grab",
+fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path, verbose: bool) -> Child {
+    let mut cmd = Command::new("ffmpeg");
+    cmd.args(&["-f", "x11grab",
             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
             "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
-            &out_path.to_string_lossy().into_owned()])
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .spawn().unwrap()
+            &out_path.to_string_lossy().into_owned()]);
+    if verbose {
+      cmd.spawn().unwrap()
+    } else {
+      cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
+    }
 }
 
 fn terminate_ffmpeg(mut child: Child) {

@@ -91,7 +91,7 @@ fn take_screenshot_image(config: &DropConfig) -> PathBuf {
 fn take_screenshot_video(config: &DropConfig) -> PathBuf {
   let out_file_name = util::generate_filename(config, None, Some(config.video_format.clone()));
   let out_file = Path::new(&config.dir).join(out_file_name);
-  screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config.audio, config.transparent);
+  screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config);
   out_file
 }
 
