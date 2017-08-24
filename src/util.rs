@@ -27,7 +27,7 @@ pub fn create_drop_url(config: &DropConfig, filename: String) -> String {
 pub fn generate_filename(config: &DropConfig, recommended_filename: Option<String>, recommended_ext: Option<String>) -> String {
   let file_base = generate_filename_base(config, recommended_filename.clone());
   let file_ext = generate_filename_extension(config, recommended_filename, recommended_ext);
-  if file_ext.is_some() {
+  if file_ext.is_some() && !file_ext.clone().unwrap().is_empty() {
     format!("{}.{}", file_base, file_ext.unwrap())
   } else {
     file_base
