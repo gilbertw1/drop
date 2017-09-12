@@ -191,7 +191,9 @@ properties. Note that you will need at least a blank html file in the bucket to 
 required 'Index Document'. A simple blank index document can be created and uploaded using the
 following drop command: 
 
+```bash
     echo "<html></html>" | drop -f index.html --filename-strategy exact -
+```
 
 * Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in
 the "Static Website Hosting" properties section). In the above example, in the DNS settings for
