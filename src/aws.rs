@@ -1,9 +1,15 @@
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, exit};
 use std::path::Path;
 
 use conf::DropConfig;
 
 pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Option<String>) {
+
+  if !file_path.exists() {
+    println!("File does not exist, nothing to upload to S3! ({:?})", file_path);
+    exit(1);
+  }
+  
   let object_name = file_name.unwrap_or(file_path.file_name().unwrap().to_string_lossy().into_owned());
   let mut cmd = Command::new("s3cmd");
   cmd.arg("--force")

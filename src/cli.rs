@@ -2,7 +2,7 @@ use clap::{Arg, App};
 
 pub fn create_drop_cli_app() -> App<'static,'static> {
   App::new("drop")
-    .version("0.2.3")
+    .version("0.2.4")
     .author("Bryan G. <bryan@bryan.codes>")
     .about("Screenshot & file upload tool with S3 support - http://github.com/gilbertw1/drop")
     .arg(Arg::with_name("file")

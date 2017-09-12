@@ -12,11 +12,9 @@ use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
 #[cfg(target_os = "macos")]
 use objc::declare::ClassDecl;
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSApp, NSApplication, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular};
-#[cfg(target_os = "macos")]
 use cocoa::base::{selector, nil};
 #[cfg(target_os = "macos")]
-use cocoa::foundation::{NSProcessInfo, NSAutoreleasePool, NSString};
+use cocoa::foundation::NSString;
 
 #[cfg(target_os = "macos")]
 pub type Id = *mut Object;
@@ -52,7 +50,7 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, config: &
     } else {
       start_cropped_screencast_process(&slop_out, out_path, config.audio, config.verbose)
     };
-  ui::gtk_stop_recording_popup();
+  ui::gtk_create_status_icon_and_wait_for_stop();
   terminate_ffmpeg(process);
 }
 
@@ -103,35 +101,6 @@ fn end_macos_capture_session(session: MacOSAVCaptureSession) {
   unsafe {
     msg_send![session.output, stopRecording];
     msg_send![session.session, stopRunning];
-  }
-}
-
-#[cfg(target_os = "macos")]
-fn create_status_bar_menu_and_wait_for_stop() {
-  unsafe {
-    let _pool = NSAutoreleasePool::new(nil);
-    let app = NSApp();
-    app.setActivationPolicy_(NSApplicationActivationPolicyRegular);
-
-    let sbar = NSStatusBar::systemStatusBar(nil);
-
-    let sbar_item = sbar.statusItemWithLength_(NSVariableStatusItemLength);
-    msg_send![sbar_item.button(), setTitle:NSString::alloc(nil).init_str("DROP")];
-    msg_send![sbar_item.button(), setHighlighted:YES];
-
-    let sbar_menu = NSMenu::new(nil).autorelease();
-    let stop_prefix = NSString::alloc(nil).init_str("Stop Recording");
-    let stop_title = stop_prefix.stringByAppendingString_(NSProcessInfo::processInfo(nil).processName());
-    let stop_action = selector("stop:");
-    let stop_key = NSString::alloc(nil).init_str("q");
-    let stop_item = NSMenuItem::alloc(nil)
-      .initWithTitle_action_keyEquivalent_(stop_title, stop_action, stop_key)
-      .autorelease();
-
-    sbar_menu.addItem_(stop_item);
-    sbar_item.setMenu_(sbar_menu);
-
-    app.run();
   }
 }
 

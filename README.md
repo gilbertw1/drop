@@ -36,7 +36,8 @@ Clone this repo
 
     git clone git@github.com:gilbertw1/drop.git
 
-Optionally place ```config.toml.default``` in ```~/.config/drop/config.toml``` and edit it with desired values
+Optionally place ```config.toml.default``` in ```~/.config/drop/config.toml``` and edit it with
+desired values
 
     mkdir -p ~/.config/drop
     cp config.toml.default ~/.config/drop/config.toml
@@ -74,14 +75,18 @@ Comprehensive help can be accessed easily by using the ```-h``` flag.
 
 ### Take a screenshot
 
-Drop can be used to take a screenshot and allows you to select a portion of the screen to save and upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once the screenshot has been saved and upload a notification will popup saying the screenshot has been upload and a url to the screenshot will be saved in the clipboard.
+Drop can be used to take a screenshot and allows you to select a portion of the screen to save and
+upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once
+the screenshot has been saved and upload a notification will popup saying the screenshot has been
+upload and a url to the screenshot will be saved in the clipboard.
 
     drop -s
     
 
 ### Take a screencast
 
-Drop can be used to take a screencast. This behaves identically to taking a screenshot except it records a video. A small button to stop the recording will appear in the top left of the screen.
+Drop can be used to take a screencast. This behaves identically to taking a screenshot except it
+records a video. A status bar icon will appear that can be used to terminate the screencast.
 
     drop -v
 
@@ -96,11 +101,13 @@ Create screencast as a gif (Linux Only)
 
 ### Upload file
    
-Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system clipboard.
+Drop can be used to upload a file to S3, resulting in a url to the uploaded file added to the system
+clipboard.
 
     drop <file>
 
-By default drop will apply a randomly generated string to the filename, however this behavior can be overridden
+By default drop will apply a randomly generated string to the filename, however this behavior can be
+overridden
 
     drop --filename-strategy exact <file>
 
@@ -122,7 +129,8 @@ You can also specify a full filename to be used:
 Configuration
 -------------
 
-The drop configuration file should be placed at ```~/.config/drop/config.toml```. If one doesn't exist, it will be created the first time drop is run. It's values are as follows:
+The drop configuration file should be placed at ```~/.config/drop/config.toml```. If one doesn't
+exist, it will be created the first time drop is run. It's values are as follows:
 
 ```toml
     [drop]
@@ -150,7 +158,10 @@ The drop configuration file should be placed at ```~/.config/drop/config.toml```
 S3 Setup
 --------
 
-If configuring Drop to upload to S3, a bucket will be required. Info on creating S3 buckets can be found here: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html. Once a bucket has been created, if you want the drops to be publicly accessible the following policy should be added to the bucket:
+If configuring Drop to upload to S3, a bucket will be required. Info on creating S3 buckets can be
+found here: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html. Once a bucket has been
+created, if you want the drops to be publicly accessible the following policy should be added to the
+bucket:
 
     {
       "Version": "2008-10-17",
@@ -171,20 +182,27 @@ Custom Domain Setup
 
 In order for Drop to work correctly with a custom domain, a few additional steps need to be taken.
 
-* Create an S3 bucket with the name of the custom domain. For example if I want my drops available at ```drop.mydomain.com```, then the S3 bucket I create needs to be named ```drop.mydomain.com```.
+* Create an S3 bucket with the name of the custom domain. For example if I want my drops available
+at ```drop.mydomain.com```, then the S3 bucket I create needs to be named ```drop.mydomain.com```.
 
-* Enable static website hosting for the bucket. This can be done by selecting the bucket and checking "Enable website hosting" under the "Static Website Hosting" section in the bucket properties. Note that you will need at least a blank html file in the bucket to select as the required 'Index Document'. A simple blank index document can be created and upload using the following drop command: 
+* Enable static website hosting for the bucket. This can be done by selecting the bucket and
+checking "Enable website hosting" under the "Static Website Hosting" section in the bucket
+properties. Note that you will need at least a blank html file in the bucket to select as the
+required 'Index Document'. A simple blank index document can be created and uploaded using the
+following drop command: 
 
     echo "<html></html>" | drop -f index.html --filename-strategy exact -
 
-* Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in the "Static Website Hosting" properties section). In the above example, in the DNS settings for ```mydomain.com```, a cname entry for ```drop``` would be added pointing to the static S3 site.
+* Add a cname record to your DNS pointing to the static S3 website endpoint (this can be found in
+the "Static Website Hosting" properties section). In the above example, in the DNS settings for
+```mydomain.com```, a cname entry for ```drop``` would be added pointing to the static S3 site.
 
-* Update the ```~/.config/drop/config.toml``` file with the variable ```host``` pointing to your custom domain (```drop.mydomain.com```)
+* Update the ```~/.config/drop/config.toml``` file with the variable ```host``` pointing to your
+custom domain (```drop.mydomain.com```)
 
 
 Roadmap
 -------
 * Better error handling
 * Add support for selecting portion of screen when screencasting on MacOS
-* Reduce non-rust dependencies
 * Add support for uploading to more remote backends than just S3
