@@ -1,5 +1,6 @@
 use ui;
 use std;
+use std::env;
 use std::process::{Command, Stdio, Child};
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
@@ -152,9 +153,13 @@ fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path) {
 
 fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audio: bool, verbose: bool) -> Child {
   let mut cmd = Command::new("ffmpeg");
+  let display = match env::var("DISPLAY") {
+    Ok(display) => display,
+    Err(e) => ":0".to_string(),
+  };
   cmd.args(&["-f", "x11grab",
              "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-             "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
+             "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
              "-f", "alsa",
              "-i", "pulse",
              "-c:v", "libx264",
