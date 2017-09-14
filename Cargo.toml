@@ -1,6 +1,6 @@
 [package]
 name = "drop"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Bryan Gilbert <gilbertw1@gmail.com>"]
 build = "build.rs"
 
