@@ -2,9 +2,11 @@
 [drop]
 dir = '~/.drop'
 # host = 'my.host.com'
-# filename_stragey = 'append'
+# filename_stragey = 'prepend'
 # unique_length = 10
 # transparent = true
+# stop_key = '<ctrl><alt>q'
+# tray_icon = true
 
 [aws]
 # bucket = 'drop'

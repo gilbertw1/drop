@@ -1,12 +1,12 @@
 use ui;
+use conf::DropConfig;
+
 use std;
 use std::env;
 use std::process::{Command, Stdio, Child};
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
-
-use conf::DropConfig;
 
 #[cfg(target_os = "macos")]
 use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
@@ -51,7 +51,7 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, config: &
     } else {
       start_cropped_screencast_process(&slop_out, out_path, config.audio, config.verbose)
     };
-  ui::gtk_create_status_icon_and_wait_for_stop();
+  ui::wait_for_user_stop(config);
   terminate_ffmpeg(process);
 }
 
@@ -59,7 +59,7 @@ pub fn crop_and_take_screencast(out_path: &Path, video_format: String, config: &
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
   let capture_session = create_and_initiate_macos_caputure_session(out_path, audio);
-  create_status_bar_menu_and_wait_for_stop();
+  wait_for_user_stop();
   end_macos_capture_session(capture_session);
 }
 

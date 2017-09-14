@@ -1,3 +1,5 @@
+use util;
+
 use std;
 use config;
 use config::Config;
@@ -5,8 +7,6 @@ use std::io::Write;
 use std::fs::File;
 use std::path::PathBuf;
 use clap::ArgMatches;
-
-use util;
 
 const DEFAULT_CONFIG: &'static str = include_str!("../config.toml.default");
 
@@ -31,6 +31,9 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").ok().map(|i| i as usize)) .unwrap_or(10),
     transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(false)),
+    tray_icon: get_bool_value(matches, "tray-icon", conf.get_bool("drop.tray_icon").unwrap_or(true)),
+    stop_key: get_string_value(matches, "stop-key").or(conf.get_str("drop.stop_key").ok()),
+    notifications: get_bool_value(matches, "notifications", conf.get_bool("drop.notifications").unwrap_or(true)),
     filename: get_string_value(matches, "filename"),
     extension: get_string_value(matches, "extension"),
     audio: get_bool_value(matches, "audio", false),
@@ -98,11 +101,14 @@ pub struct DropConfig {
   pub filename_strategy: String,
   pub unique_length: usize,
   pub transparent: bool,
-  pub filename: Option<String>,
-  pub extension: Option<String>,
+  pub tray_icon: bool,
+  pub stop_key: Option<String>,
+  pub notifications: bool,
 
   // CLI Only Options
   pub audio: bool,
   pub video_format: String,
   pub verbose: bool,
+  pub filename: Option<String>,
+  pub extension: Option<String>,
 }

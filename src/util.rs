@@ -1,9 +1,9 @@
+use conf::DropConfig;
+
 use std::path::Path;
 use rand;
 use rand::Rng;
 use std::ffi::OsStr;
-
-use conf::DropConfig;
 
 pub fn path_to_str(path: &Path) -> String {
   path.to_string_lossy().into_owned()

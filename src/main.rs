@@ -5,29 +5,30 @@ extern crate nix;
 
 #[cfg(target_os = "linux")]
 extern crate gtk;
+#[cfg(target_os = "linux")]
+extern crate libc;
+
+#[cfg(target_os = "linux")]
+#[link(name = "keybinder-3.0")]
+extern { }
 
 #[cfg(target_os = "macos")]
 #[macro_use] extern crate objc;
-
 #[cfg(target_os = "macos")]
 extern crate cocoa;
 
 #[cfg(target_os = "macos")]
 #[link(name = "Cocoa", kind = "framework")]
 extern { }
-
 #[cfg(target_os = "macos")]
 #[link(name = "Foundation", kind = "framework")]
 extern { }
-
 #[cfg(target_os = "macos")]
 #[link(name = "AVFoundation", kind = "framework")]
 extern { }
-
 #[cfg(target_os = "macos")]
 #[link(name = "CoreGraphics", kind = "framework")]
 extern { }
-
 
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
@@ -71,12 +72,16 @@ fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
   if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
     println!("S3 not properly configured, not uploading screenshot.");
     clip::copy_to_clipboard(format!("file://{}", util::path_to_str(&out_file.as_path())));
-    notify::send_screenshot_notification(&out_file.as_path());
+    if config.notifications {
+      notify::send_screenshot_notification(&out_file.as_path());
+    }
   } else {
     aws::upload_file_to_s3(&config, &out_file.as_path(), None);
     let url = util::create_drop_url(&config, util::path_file_name(&out_file.as_path()));
     clip::copy_to_clipboard(url.clone());
-    notify::send_screenshot_notification(&out_file.as_path());
+    if config.notifications {
+      notify::send_screenshot_notification(&out_file.as_path());
+    }
     println!("{}", url);
   }
 }
@@ -115,7 +120,9 @@ fn handle_file_upload(config: DropConfig, file: &Path) {
     aws::upload_file_to_s3(&config, &file, Some(filename.clone()));
     let url = util::create_drop_url(&config, filename.clone());
     clip::copy_to_clipboard(url.clone());
-    notify::send_upload_notification(filename);
+    if config.notifications {
+      notify::send_upload_notification(filename);
+    }
     println!("{}", url);
   }
 }
@@ -130,6 +137,8 @@ fn handle_stdin(config: DropConfig) {
   aws::upload_file_to_s3(&config, &path, Some(out_filename.clone()));
   let url = util::create_drop_url(&config, out_filename.clone());
   clip::copy_to_clipboard(url.clone());
-  notify::send_upload_notification(out_filename.clone());
+  if config.notifications {
+    notify::send_upload_notification(out_filename.clone());
+  }
   println!("{}", url);
 }

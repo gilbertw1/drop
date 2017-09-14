@@ -19,6 +19,7 @@ Dependencies
 * slop (screenshot + screencast) - https://github.com/naelstrof/slop
 * imagemagick (screenshot) - https://www.imagemagick.org
 * ffmpeg (screencast) - https://ffmpeg.org
+* libkeybinder - https://github.com/kupferlauncher/keybinder/tree/keybinder-3.0
 
 ### MacOS
 
@@ -134,22 +135,28 @@ exist, it will be created the first time drop is run. It's values are as follows
 
 ```toml
     [drop]
-    dir = '~/.drop'               # Directory used to save generated files (DEFAULT: ~/.drop)
-    host = ''                     # Custom domain used to generate screenshot links (DEFAULT: empty)
-    unique_length = 10            # Length of unique string used in creating filenames (DEFAULT: 10)
-    filename_strategy = 'prepend' # Naming strategy to use when uploading file (DEFAULT: PREPEND)
-                                  #   VALUES:           
-                                  #       append: Append unique string to filename
-                                  #       prepend: Prepend unique string to filename
-                                  #       exact: Don't alter filename when uploading
-                                  #       replace: Replace filename with unique string
-    transparent = false           # Uses transparent overlay when selecting area of screen (default: false)
-                                  #  REQUIRES Compositor when set to true
+    dir = '~/.drop'                 # Directory used to save generated files (DEFAULT: ~/.drop)
+    host = ''                       # Custom domain used to generate screenshot links (DEFAULT: empty)
+    unique_length = 10              # Length of unique string used in creating filenames (DEFAULT: 10)
+    filename_strategy = 'prepend'   # Naming strategy to use when uploading file (DEFAULT: PREPEND)
+                                    #   VALUES:           
+                                    #       append: Append unique string to filename
+                                    #       prepend: Prepend unique string to filename
+                                    #       exact: Don't alter filename when uploading
+                                    #       replace: Replace filename with unique string
+    transparent = false             # Uses transparent overlay when selecting area of screen (default: false)
+                                    #  REQUIRES Compositor when set to true [Linux Only]
+    tray_icon = true                # Display tray icon that can be used to stop screencast while recording (default: true)
+    stop_key = '<control><shift>q'  # If defined specifies a keybinding to listen for that
+                                    # that will be used to terminate a recording. (default: empty)
+                                    # uses gtk accelorator format: https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse
+                                    # Eg. <ctrl><alt>q
+    notifications = true            # Display desktop notifications (default: true)
 
     [aws]
-    bucket = 'drop'               # S3 bucket to upload screenshots & files to (DEFAULT: empty)
-    key = ''                      # AWS credentials used to authenticate with S3 (DEFAULT: empty)
-    secret = ''                   # AWS secret used to authenticate with S3 (DEFAULT: empty)
+    bucket = 'drop'                 # S3 bucket to upload screenshots & files to (DEFAULT: empty)
+    key = ''                        # AWS credentials used to authenticate with S3 (DEFAULT: empty)
+    secret = ''                     # AWS secret used to authenticate with S3 (DEFAULT: empty)
 ```
 
 * More info on aws access keys [here](https://aws.amazon.com/developers/access-keys/)
