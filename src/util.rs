@@ -1,9 +1,12 @@
 use conf::DropConfig;
 
 use std::path::Path;
+use std::ffi::OsStr;
+use std::thread;
+use std::io::{BufReader, BufRead};
+use std::process::{Command, Child, Stdio, ExitStatus};
 use rand;
 use rand::Rng;
-use std::ffi::OsStr;
 
 pub fn path_to_str(path: &Path) -> String {
   path.to_string_lossy().into_owned()
@@ -78,4 +81,43 @@ fn append_rand_string(value: &str, len: usize) -> String {
 
 fn rand_string(len: usize) -> String {
   rand::thread_rng().gen_ascii_chars().take(len).collect()
+}
+
+pub fn run_command_and_wait(cmd: &mut Command, name: &str, config: &DropConfig) -> ExitStatus {
+  run_command(cmd, name, config).wait().unwrap()
+}
+
+pub fn run_command(cmd: &mut Command, name: &str, config: &DropConfig) -> Child {
+  if config.verbose {
+    let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+    log_child_output_to_stdout(&mut child, name);
+    child
+  } else {
+    cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
+  }
+}
+
+fn log_child_output_to_stdout(child: &mut Child, name: &str) {
+  let name_out = name.to_owned();
+  let name_err = name.to_owned();
+  let mut stdout = child.stdout.take();
+  let mut stderr = child.stderr.take();
+  
+  thread::spawn(move || {
+    if let Some(ref mut stdout) = stdout {
+      for line in BufReader::new(stdout).lines() {
+        let line = line.unwrap();
+        println!("[{}] {}", name_out, line);
+      }
+    }
+  });
+
+  thread::spawn(move || {
+    if let Some(ref mut stderr) = stderr {
+      for line in BufReader::new(stderr).lines() {
+        let line = line.unwrap();
+        println!("[{}] {}", name_err, line);
+      }
+    }
+  });
 }

@@ -1,9 +1,11 @@
 use ui;
 use conf::DropConfig;
+use util;
 
 use std;
 use std::env;
-use std::process::{Command, Stdio, Child};
+use std::io;
+use std::process::{Command, Child, ExitStatus};
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
@@ -25,43 +27,143 @@ extern {
   fn CGMainDisplayID() -> u32;
 }
 
-#[cfg(target_os = "macos")]
-pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
-  let result =
-    Command::new("screencapture").args(&["-s", &out_path.to_string_lossy().into_owned()]).output().unwrap();
+#[cfg(target_os = "linux")]
+pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
+  let slop_out = run_slop(config);
+  crop_and_save_screenshot(&slop_out, out_path, config);
+}
 
-  if !result.status.success() {
+#[cfg(target_os = "linux")]
+pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
+  let slop_out = run_slop(config);
+  let process =
+    if config.video_format == "gif" {
+      start_cropped_screencast_process_gif(&slop_out, out_path, config)
+    } else {
+      start_cropped_screencast_process(&slop_out, out_path, config)
+    };
+
+  println!("STARTED FFMPEG COMMAND");
+  println!("WAITING FOR USER STOP");
+  ui::wait_for_user_stop(config);
+  println!("FINISHED USER STOP");
+  let result = terminate_ffmpeg(process);
+
+  if result.is_err() {
+    println!("ERROR: Failed to record screencast");
+    std::process::exit(1);
+  }
+}
+
+#[cfg(target_os = "macos")]
+pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
+  let mut cmd = Command::new("screencapture").args(&["-s", &out_path.to_string_lossy().into_owned()]);
+  let result = util::run_command_and_wait(&mut cmd, "SCREEN CAPTURE", config);
+
+  if !result.success() {
     println!("Cancelling drop, exiting");
     std::process::exit(1);
   }
 }
 
-#[cfg(target_os = "linux")]
-pub fn crop_and_take_screenshot(out_path: &Path, transparent: bool) {
-  let slop_out = run_slop(transparent);
-  crop_and_save_screenshot(&slop_out, out_path);
-}
-
-#[cfg(target_os = "linux")]
-pub fn crop_and_take_screencast(out_path: &Path, video_format: String, config: &DropConfig) {
-  let slop_out = run_slop(config.transparent);
-  let process =
-    if video_format == "gif" {
-      start_cropped_screencast_process_gif(&slop_out, out_path, config.verbose)
-    } else {
-      start_cropped_screencast_process(&slop_out, out_path, config.audio, config.verbose)
-    };
-  ui::wait_for_user_stop(config);
-  terminate_ffmpeg(process);
-}
-
-
 #[cfg(target_os = "macos")]
-pub fn crop_and_take_screencast(out_path: &Path, video_format: String, audio: bool, transparent: bool) {
-  let capture_session = create_and_initiate_macos_caputure_session(out_path, audio);
+pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
+  let capture_session = create_and_initiate_macos_caputure_session(out_path, config.audio);
   wait_for_user_stop();
   end_macos_capture_session(capture_session);
 }
+
+fn run_slop(config: &DropConfig) -> SlopOutput {
+  let result =
+    if config.transparent {
+      Command::new("slop").args(&["-l", "-c", "0.3,0.4,0.6,0.4", "-f", "%x %y %w %h %g %i"]).output().unwrap()
+    } else {
+      Command::new("slop").args(&["-b", "5", "-c", "0.3,0.4,0.6,1", "-f", "%x %y %w %h %g %i"]).output().unwrap()
+    };
+
+  if !result.status.success() {
+    println!("Cancelled drop, exiting");
+    std::process::exit(1);
+  }
+
+  let output = String::from_utf8(result.stdout).unwrap();
+  let split: Vec<&str> = output.trim().split(" ").collect();
+
+  SlopOutput {
+    x: split[0].to_string(),
+    y: split[1].to_string(),
+    w: split[2].to_string(),
+    h: split[3].to_string(),
+    g: split[4].to_string(),
+    id: split[5].to_string(),
+    cancel: false,
+  }
+}
+
+fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path, config: &DropConfig) {
+  let mut cmd = Command::new("import");
+  cmd.args(&["-window", "root",
+             "-crop", &slop_out.g,
+             &out_path.to_string_lossy().into_owned()]);
+
+  let result = util::run_command_and_wait(&mut cmd, "IMPORT", config);
+
+  if !result.success() {
+    println!("ERROR: Failed to take the screenshot");
+    std::process::exit(1);
+  }
+}
+
+fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, config: &DropConfig) -> Child {
+  let mut cmd = Command::new("ffmpeg");
+  let display = match env::var("DISPLAY") {
+    Ok(display) => display,
+    Err(_) => ":0".to_string(),
+  };
+  cmd.args(&["-f", "x11grab",
+             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+             "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
+             "-f", "alsa",
+             "-i", "pulse",
+             "-c:v", "libx264",
+             "-c:a", "aac",
+             "-crf", "23",
+             "-preset", "ultrafast",
+             "-movflags", "+faststart",
+             "-profile:v", "baseline",
+             "-level", "3.0",
+             "-pix_fmt", "yuv420p",
+             "-ac", "2",
+             "-strict", "experimental",
+             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
+
+  if !config.audio {
+    cmd.arg("-an");
+  }
+
+  cmd.arg(&out_path.to_string_lossy().into_owned());
+  println!("STARTING FFMPEG COMMAND");
+  util::run_command(&mut cmd, "FFMPEG", config)
+}
+
+fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path, config: &DropConfig) -> Child {
+    let mut cmd = Command::new("ffmpeg");
+    cmd.args(&["-f", "x11grab",
+            "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+            "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
+            &out_path.to_string_lossy().into_owned()]);
+  util::run_command(&mut cmd, "FFMPEG", config)
+}
+
+fn terminate_ffmpeg(mut child: Child) -> io::Result<ExitStatus> {
+  let child_id = child.id();
+  let result = kill(Pid::from_raw(child_id as i32), Signal::SIGTERM);
+  if result.is_err() {
+    println!("WARNING: Failed to propertly terminate ffmpeg process")
+  }
+  child.wait()
+}
+
 
 #[cfg(target_os = "macos")]
 fn create_and_initiate_macos_caputure_session(out_path: &Path, audio: bool) -> MacOSAVCaptureSession {
@@ -112,98 +214,6 @@ fn to_ns_string(str: String) -> Id {
     let NSString = Class::get("NSString").unwrap();
     msg_send![NSString, stringWithUTF8String:value.as_ptr()]
   }
-}
-
-fn run_slop(transparent: bool) -> SlopOutput {
-  let result =
-    if transparent {
-      Command::new("slop").args(&["-l", "-c", "0.3,0.4,0.6,0.4", "-f", "%x %y %w %h %g %i"]).output().unwrap()
-    } else {
-      Command::new("slop").args(&["-b", "5", "-c", "0.3,0.4,0.6,1", "-f", "%x %y %w %h %g %i"]).output().unwrap()
-    };
-
-  if !result.status.success() {
-    println!("Cancelled drop, exiting");
-    std::process::exit(1);
-  }
-
-  let output = String::from_utf8(result.stdout).unwrap();
-  let split: Vec<&str> = output.trim().split(" ").collect();
-
-  SlopOutput {
-    x: split[0].to_string(),
-    y: split[1].to_string(),
-    w: split[2].to_string(),
-    h: split[3].to_string(),
-    g: split[4].to_string(),
-    id: split[5].to_string(),
-    cancel: false,
-  }
-}
-
-fn crop_and_save_screenshot(slop_out: &SlopOutput, out_path: &Path) {
-  Command::new("import")
-    .args(&["-window", "root",
-            "-crop", &slop_out.g,
-            &out_path.to_string_lossy().into_owned()])
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .spawn().unwrap().wait();
-}
-
-fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, audio: bool, verbose: bool) -> Child {
-  let mut cmd = Command::new("ffmpeg");
-  let display = match env::var("DISPLAY") {
-    Ok(display) => display,
-    Err(e) => ":0".to_string(),
-  };
-  cmd.args(&["-f", "x11grab",
-             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-             "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
-             "-f", "alsa",
-             "-i", "pulse",
-             "-c:v", "libx264",
-             "-c:a", "aac",
-             "-crf", "23",
-             "-preset", "ultrafast",
-             "-movflags", "+faststart",
-             "-profile:v", "baseline",
-             "-level", "3.0",
-             "-pix_fmt", "yuv420p",
-             "-ac", "2",
-             "-strict", "experimental",
-             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
-
-  if !audio {
-    cmd.arg("-an");
-  }
-
-  cmd.arg(&out_path.to_string_lossy().into_owned());
-
-  if verbose {
-    cmd.spawn().unwrap()
-  } else {
-    cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
-  }
-}
-
-fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path, verbose: bool) -> Child {
-    let mut cmd = Command::new("ffmpeg");
-    cmd.args(&["-f", "x11grab",
-            "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-            "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
-            &out_path.to_string_lossy().into_owned()]);
-    if verbose {
-      cmd.spawn().unwrap()
-    } else {
-      cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap()
-    }
-}
-
-fn terminate_ffmpeg(mut child: Child) {
-  let child_id = child.id();
-  kill(Pid::from_raw(child_id as i32), Signal::SIGTERM);
-  child.wait();
 }
 
 #[derive(Debug)]

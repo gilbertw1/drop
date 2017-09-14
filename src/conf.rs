@@ -82,13 +82,20 @@ fn get_video_format(matches: &ArgMatches) -> String {
 }
 
 fn ensure_directory_exists(dir: &PathBuf) {
-  std::fs::create_dir_all(dir);
+  let result = std::fs::create_dir_all(dir);
+  if result.is_err() {
+    println!("ERROR: Failed to ensure drop directory exists");
+    std::process::exit(1);
+  }
 }
 
 fn create_default_config_file(config_file_path: &PathBuf) {
   ensure_directory_exists(&config_file_path.parent().unwrap().to_path_buf());
   let mut file = File::create(config_file_path).unwrap();
-  file.write_all(DEFAULT_CONFIG.as_bytes());
+  let result = file.write_all(DEFAULT_CONFIG.as_bytes());
+  if result.is_err() {
+    println!("WARNING: Failed to create default config file");
+  }
 }
 
 #[derive(Debug)]

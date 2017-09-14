@@ -57,7 +57,10 @@ fn main() {
   } else if matches.is_present("screenshot") || matches.is_present("video") {
     handle_screenshot(config, &matches);
   } else {
-    cli_app.print_help();
+    let result = cli_app.print_help();
+    if result.is_err() {
+      println!("WARNING: Error occurred attempting to print help text")
+    }
   }
 }
 
@@ -73,14 +76,14 @@ fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
     println!("S3 not properly configured, not uploading screenshot.");
     clip::copy_to_clipboard(format!("file://{}", util::path_to_str(&out_file.as_path())));
     if config.notifications {
-      notify::send_screenshot_notification(&out_file.as_path());
+      notify::send_screenshot_notification(&out_file.as_path(), &config);
     }
   } else {
     aws::upload_file_to_s3(&config, &out_file.as_path(), None);
     let url = util::create_drop_url(&config, util::path_file_name(&out_file.as_path()));
     clip::copy_to_clipboard(url.clone());
     if config.notifications {
-      notify::send_screenshot_notification(&out_file.as_path());
+      notify::send_screenshot_notification(&out_file.as_path(), &config);
     }
     println!("{}", url);
   }
@@ -89,14 +92,14 @@ fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
 fn take_screenshot_image(config: &DropConfig) -> PathBuf {
   let out_file_name = util::generate_filename(config, None, Some("png".to_string()));
   let out_file = Path::new(&config.dir).join(out_file_name);
-  screenshot::crop_and_take_screenshot(out_file.as_path(), config.transparent);
+  screenshot::crop_and_take_screenshot(out_file.as_path(), config);
   out_file
 }
 
 fn take_screenshot_video(config: &DropConfig) -> PathBuf {
   let out_file_name = util::generate_filename(config, None, Some(config.video_format.clone()));
   let out_file = Path::new(&config.dir).join(out_file_name);
-  screenshot::crop_and_take_screencast(out_file.as_path(), config.video_format.clone(), config);
+  screenshot::crop_and_take_screencast(out_file.as_path(), config);
   out_file
 }
 
@@ -121,7 +124,7 @@ fn handle_file_upload(config: DropConfig, file: &Path) {
     let url = util::create_drop_url(&config, filename.clone());
     clip::copy_to_clipboard(url.clone());
     if config.notifications {
-      notify::send_upload_notification(filename);
+      notify::send_upload_notification(filename, &config);
     }
     println!("{}", url);
   }
@@ -129,16 +132,28 @@ fn handle_file_upload(config: DropConfig, file: &Path) {
 
 fn handle_stdin(config: DropConfig) {
   let mut buffer = Vec::new();
-  io::stdin().read_to_end(&mut buffer);
+
+  let result = io::stdin().read_to_end(&mut buffer);
+  if result.is_err() {
+    println!("ERROR: Caught error while reading input from stdin");
+    std::process::exit(1);
+  }
+  
   let out_filename = util::generate_filename(&config, None, None);
   let path = Path::new(&config.dir).join(out_filename.clone());
   let mut file = File::create(&path).unwrap();
-  file.write_all(&buffer);
+
+  let write_result = file.write_all(&buffer);
+  if write_result.is_err() {
+    println!("ERROR: Caught error while writing to file");
+    std::process::exit(1)
+  }
+
   aws::upload_file_to_s3(&config, &path, Some(out_filename.clone()));
   let url = util::create_drop_url(&config, out_filename.clone());
   clip::copy_to_clipboard(url.clone());
   if config.notifications {
-    notify::send_upload_notification(out_filename.clone());
+    notify::send_upload_notification(out_filename.clone(), &config);
   }
   println!("{}", url);
 }

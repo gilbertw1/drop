@@ -16,14 +16,17 @@ use cocoa::appkit::{NSApp, NSMenu, NSMenuItem, NSStatusBar, NSVariableStatusItem
 use cocoa::foundation::{NSProcessInfo, NSAutoreleasePool, NSString};
 
 #[cfg(target_os = "linux")]
+#[allow(unused)]
 pub fn wait_for_user_stop(config: &DropConfig) {
   if gtk::init().is_err() {
     println!("Failed to initialize GTK.");
     std::process::exit(1);
   }
 
+  let mut status_icon: Option<gtk::StatusIcon> = None;
+
   if config.tray_icon {
-    gtk_create_stop_status_icon();
+    status_icon = Some(gtk_create_stop_status_icon());
   }
 
   if config.stop_key.is_some() {
@@ -34,7 +37,7 @@ pub fn wait_for_user_stop(config: &DropConfig) {
 }
 
 #[cfg(target_os = "linux")]
-fn gtk_create_stop_status_icon() {
+fn gtk_create_stop_status_icon() -> gtk::StatusIcon {
   let status_icon = gtk::StatusIcon::new_from_icon_name("camera");
   status_icon.set_title("Drop");
 
@@ -53,6 +56,8 @@ fn gtk_create_stop_status_icon() {
     let button: u32 = 0;
     menu.popup_easy(button, gtk::get_current_event_time());
   });
+
+  status_icon
 }
 
 #[cfg(target_os = "linux")]

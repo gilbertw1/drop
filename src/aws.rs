@@ -1,13 +1,15 @@
 use conf::DropConfig;
+use util;
 
-use std::process::{Command, Stdio, exit};
+use std;
+use std::process::Command;
 use std::path::Path;
 
 pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Option<String>) {
 
   if !file_path.exists() {
-    println!("File does not exist, nothing to upload to S3! ({:?})", file_path);
-    exit(1);
+    println!("ERROR: File does not exist, nothing to upload to S3! ({:?})", file_path);
+    std::process::exit(1);
   }
   
   let object_name = file_name.unwrap_or(file_path.file_name().unwrap().to_string_lossy().into_owned());
@@ -20,9 +22,10 @@ pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Optio
     .arg(file_path.to_string_lossy().into_owned())
     .arg(format!("s3://{}/{}", config.aws_bucket.clone().unwrap(), object_name));
 
-  if config.verbose {
-    cmd.spawn().unwrap().wait();
-  } else {
-    cmd.stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap().wait();
+  let result = util::run_command_and_wait(&mut cmd, "S3CMD", config);
+
+  if !result.success() {
+    println!("ERROR: File failed to upload properly to S3 ({:?})", file_path);
+    std::process::exit(1);
   }
 }
