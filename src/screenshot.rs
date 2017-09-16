@@ -11,11 +11,7 @@ use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
 
 #[cfg(target_os = "macos")]
-use objc::runtime::{Object, Class, BOOL, YES, NO, Sel};
-#[cfg(target_os = "macos")]
-use objc::declare::ClassDecl;
-#[cfg(target_os = "macos")]
-use cocoa::base::{selector, nil};
+use objc::runtime::{Object, Class};
 #[cfg(target_os = "macos")]
 use cocoa::foundation::NSString;
 
@@ -43,10 +39,7 @@ pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
       start_cropped_screencast_process(&slop_out, out_path, config)
     };
 
-  println!("STARTED FFMPEG COMMAND");
-  println!("WAITING FOR USER STOP");
   ui::wait_for_user_stop(config);
-  println!("FINISHED USER STOP");
   let result = terminate_ffmpeg(process);
 
   if result.is_err() {
@@ -57,7 +50,8 @@ pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
 
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
-  let mut cmd = Command::new("screencapture").args(&["-s", &out_path.to_string_lossy().into_owned()]);
+  let mut cmd = Command::new("screencapture");
+  cmd.args(&["-s", &out_path.to_string_lossy().into_owned()]);
   let result = util::run_command_and_wait(&mut cmd, "SCREEN CAPTURE", config);
 
   if !result.success() {
@@ -69,7 +63,7 @@ pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
   let capture_session = create_and_initiate_macos_caputure_session(out_path, config.audio);
-  wait_for_user_stop();
+  ui::wait_for_user_stop();
   end_macos_capture_session(capture_session);
 }
 
@@ -142,7 +136,6 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, conf
   }
 
   cmd.arg(&out_path.to_string_lossy().into_owned());
-  println!("STARTING FFMPEG COMMAND");
   util::run_command(&mut cmd, "FFMPEG", config)
 }
 
@@ -210,7 +203,7 @@ fn end_macos_capture_session(session: MacOSAVCaptureSession) {
 #[cfg(target_os = "macos")]
 fn to_ns_string(str: String) -> Id {
   unsafe {
-    let value = CString::new(str).unwrap();
+    let value = std::ffi::CString::new(str).unwrap();
     let NSString = Class::get("NSString").unwrap();
     msg_send![NSString, stringWithUTF8String:value.as_ptr()]
   }

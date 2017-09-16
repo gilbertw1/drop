@@ -1,7 +1,6 @@
 use conf::DropConfig;
 
 use std;
-use std::ffi::CStr;
 
 #[cfg(target_os = "linux")]
 use gtk;
@@ -10,8 +9,11 @@ use gtk::prelude::*;
 #[cfg(target_os = "linux")]
 use libc::*;
 
+
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSApp, NSMenu, NSMenuItem, NSStatusBar, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular};
+use cocoa::base::{nil, YES, selector};
+#[cfg(target_os = "macos")]
+use cocoa::appkit::{NSApp, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength, NSApplicationActivationPolicyRegular, NSApplication};
 #[cfg(target_os = "macos")]
 use cocoa::foundation::{NSProcessInfo, NSAutoreleasePool, NSString};
 
@@ -69,7 +71,7 @@ fn create_stop_keybinding(keybinding: String) {
 }
 
 #[cfg(target_os = "macos")]
-fn wait_for_user_stop() {
+pub fn wait_for_user_stop() {
   unsafe {
     let _pool = NSAutoreleasePool::new(nil);
     let app = NSApp();
@@ -106,7 +108,7 @@ extern {
 
 #[cfg(target_os = "linux")]
 unsafe extern fn key_handler<F>(keycode: *const c_char, arg: *mut c_void) where F: FnMut(String) {
-  let keycode = CStr::from_ptr(keycode).to_str();
+  let keycode = std::ffi::CStr::from_ptr(keycode).to_str();
   match keycode {
     Ok(keycode) => {
       let closure = arg as *mut F;
