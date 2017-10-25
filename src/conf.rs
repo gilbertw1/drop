@@ -37,6 +37,8 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     filename: get_string_value(matches, "filename"),
     extension: get_string_value(matches, "extension"),
     audio: get_bool_value(matches, "audio", false),
+    border: get_bool_value(matches, "border", true),
+    mouse: get_bool_value(matches, "mouse", false),
     video_format: get_video_format(matches),
     verbose: matches.is_present("verbose"),
   };
@@ -114,8 +116,10 @@ pub struct DropConfig {
 
   // CLI Only Options
   pub audio: bool,
+  pub border: bool,
+  pub extension: Option<String>,
+  pub filename: Option<String>,
+  pub mouse: bool,
   pub video_format: String,
   pub verbose: bool,
-  pub filename: Option<String>,
-  pub extension: Option<String>,
 }

@@ -2,6 +2,7 @@ extern crate config;
 extern crate rand;
 extern crate clap;
 extern crate nix;
+extern crate sys_info;
 
 #[cfg(target_os = "linux")]
 extern crate gtk;

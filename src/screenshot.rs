@@ -5,10 +5,12 @@ use util;
 use std;
 use std::env;
 use std::io;
+use std::fs;
 use std::process::{Command, Child, ExitStatus};
 use std::path::Path;
 use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
+use sys_info;
 
 #[cfg(target_os = "macos")]
 use objc::runtime::{Object, Class};
@@ -41,6 +43,10 @@ pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
 
   ui::wait_for_user_stop(config);
   let result = terminate_ffmpeg(process);
+
+  if config.video_format == "gif" {
+    post_process_screencast_gif(out_path, config)
+  }
 
   if result.is_err() {
     println!("ERROR: Failed to record screencast");
@@ -114,22 +120,24 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, conf
     Ok(display) => display,
     Err(_) => ":0".to_string(),
   };
-  cmd.args(&["-f", "x11grab",
-             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-             "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
-             "-f", "alsa",
-             "-i", "pulse",
-             "-c:v", "libx264",
-             "-c:a", "aac",
-             "-crf", "23",
-             "-preset", "ultrafast",
-             "-movflags", "+faststart",
-             "-profile:v", "baseline",
-             "-level", "3.0",
-             "-pix_fmt", "yuv420p",
-             "-ac", "2",
-             "-strict", "experimental",
-             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
+  cmd.args(vec!["-f", "x11grab",
+                "-show_region", if config.border { "1" } else { "0" },
+                "-draw_mouse", if config.mouse { "1" } else { "0" },
+                "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+                "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
+                "-f", "alsa",
+                "-i", "pulse",
+                "-c:v", "libx264",
+                "-c:a", "aac",
+                "-crf", "23",
+                "-preset", "ultrafast",
+                "-movflags", "+faststart",
+                "-profile:v", "baseline",
+                "-level", "3.0",
+                "-pix_fmt", "yuv420p",
+                "-ac", "2",
+                "-strict", "experimental",
+                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
 
   if !config.audio {
     cmd.arg("-an");
@@ -140,12 +148,41 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, conf
 }
 
 fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path, config: &DropConfig) -> Child {
-    let mut cmd = Command::new("ffmpeg");
-    cmd.args(&["-f", "x11grab",
-            "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-            "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
-            &out_path.to_string_lossy().into_owned()]);
+  let pamfile = &out_path.to_string_lossy().into_owned().replace(".gif", ".pam");
+  let mut cmd = Command::new("ffmpeg");
+  cmd.args(&["-f", "x11grab",
+             "-show_region", if config.border { "1" } else { "0" },
+             "-draw_mouse", if config.mouse { "1" } else { "0" },
+             "-framerate", "15",
+             "-s", &format!("{}x{}", slop_out.w, slop_out.h),
+             "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
+             "-codec:v", "pam",
+             "-f", "rawvideo",
+             pamfile]);
   util::run_command(&mut cmd, "FFMPEG", config)
+}
+
+fn post_process_screencast_gif(out_path: &Path, config: &DropConfig) {
+  let memory_limit = ((sys_info::mem_info().unwrap().free as f64 * 0.8) as f64) as u64;
+  let cache_id = util::rand_string(30);
+  let cachedir = Path::new(&config.dir).join(".cache").join(cache_id);
+  let pamfile = out_path.to_str().unwrap().replace(".gif", ".pam");
+  let mut process_cmd = Command::new("convert");
+  process_cmd.args(&["-set", "delay", "10",
+                     "-limit", "disk", "unlimited",
+                     "-limit", "memory", &format!("{}kiB", memory_limit),
+                     "-layers", "Optimize", 
+                     "-define", &format!("registry:temporary-path={}", cachedir.to_str().unwrap()),
+                     &pamfile,
+                     out_path.to_str().unwrap()]);
+
+  let result = util::run_command_and_wait(&mut process_cmd, "FFMPEG", config);
+  fs::remove_file(pamfile);
+  fs::remove_dir_all(cachedir);
+  if !result.success() {
+    println!("ERROR: Failed to generate gif");
+    std::process::exit(1);
+  }
 }
 
 fn terminate_ffmpeg(mut child: Child) -> io::Result<ExitStatus> {

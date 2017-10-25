@@ -79,7 +79,7 @@ fn append_rand_string(value: &str, len: usize) -> String {
   format!("{}--{}", value, rand_string(len))
 }
 
-fn rand_string(len: usize) -> String {
+pub fn rand_string(len: usize) -> String {
   rand::thread_rng().gen_ascii_chars().take(len).collect()
 }
 
