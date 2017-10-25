@@ -17,7 +17,7 @@ Dependencies
 *Optional*
 
 * slop (screenshot + screencast) - https://github.com/naelstrof/slop
-* imagemagick (screenshot) - https://www.imagemagick.org
+* imagemagick (screenshot + gif screencast) - https://www.imagemagick.org
 * ffmpeg (screencast) - https://ffmpeg.org
 * libkeybinder - https://github.com/kupferlauncher/keybinder/tree/keybinder-3.0
 

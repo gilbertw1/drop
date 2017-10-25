@@ -6,9 +6,18 @@ use config::Config;
 use std::io::Write;
 use std::fs::File;
 use std::path::PathBuf;
+use std::collections::HashSet;
 use clap::ArgMatches;
 
 const DEFAULT_CONFIG: &'static str = include_str!("../config.toml.default");
+
+lazy_static! {
+  static ref AUDIO_SOURCES: HashSet<String> = ["desktop".to_string(), "mic".to_string()].iter().cloned().collect();
+  static ref FILENAME_STRATEGIES: HashSet<String> = ["prepend".to_string(),
+                                                "append".to_string(),
+                                                "exact".to_string(),
+                                                "replace".to_string()].iter().cloned().collect();
+}
 
 pub fn load_config(matches: &ArgMatches) -> DropConfig {
   let home_dir = std::env::home_dir().unwrap();
@@ -27,7 +36,7 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     aws_bucket: get_string_value(matches, "aws-bucket").or(conf.get_str("aws.bucket").ok()),
     aws_key: get_string_value(matches, "aws-key").or(conf.get_str("aws.key").ok()),
     aws_secret: get_string_value(matches, "aws-secret").or(conf.get_str("aws.secret").ok()),
-    filename_strategy: extract_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy").ok())),
+    filename_strategy: extract_filename_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy").ok())),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").ok().map(|i| i as usize)) .unwrap_or(10),
     transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(false)),
@@ -37,6 +46,7 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     filename: get_string_value(matches, "filename"),
     extension: get_string_value(matches, "extension"),
     audio: get_bool_value(matches, "audio", false),
+    audio_source: extract_audio_source(get_string_value(matches, "audio_source")),
     border: get_bool_value(matches, "border", true),
     mouse: get_bool_value(matches, "mouse", false),
     video_format: get_video_format(matches),
@@ -47,18 +57,20 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
   config
 }
 
-fn extract_strategy(strat: Option<String>) -> String {
-  if strat.is_none() {
-    "prepend".to_string()
-  } else {
-    let strat = strat.unwrap();
-    if strat.to_lowercase() == "exact" || strat.to_lowercase() == "append" ||
-      strat.to_lowercase() == "replace" || strat.to_lowercase() == "prepend" {
-        strat.to_lowercase()
-    } else {
-      panic!(format!("Unrecognized filename strategy: {}", strat))
-    }
+fn extract_filename_strategy(strategy: Option<String>) -> String {
+  let strat = strategy.map(|strat| strat.to_lowercase()).unwrap_or("prepend".to_string());
+  if !FILENAME_STRATEGIES.contains(&strat) {
+    panic!(format!("Unrecognized filename strategy: {}", strat))
   }
+  strat
+}
+
+fn extract_audio_source(source: Option<String>) -> String {
+  let source = source.map(|strat| strat.to_lowercase()).unwrap_or("mic".to_string());
+  if !AUDIO_SOURCES.contains(&source) {
+    panic!("Unrecognized audio source: {}", source);
+  }
+  source
 }
 
 fn none_if_empty(optvalue: Option<String>) -> Option<String> {
@@ -116,6 +128,7 @@ pub struct DropConfig {
 
   // CLI Only Options
   pub audio: bool,
+  pub audio_source: String,
   pub border: bool,
   pub extension: Option<String>,
   pub filename: Option<String>,

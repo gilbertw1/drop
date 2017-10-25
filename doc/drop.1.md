@@ -28,6 +28,10 @@ Project home page: https://github.com/gilbertw1/drop
 : Enable audio recording when creating screencast
   [default: false]
 
+--audio-source *SOURCE*
+: Audio source to use when creating screencast.  Possible values are mic or desktop
+  (desktop only available on Linux)
+
 -b, --border *BOOL*
 : Display border around screencast area while recording (does not show in video, Linux only)
   [default: true]
@@ -66,17 +70,29 @@ Project home page: https://github.com/gilbertw1/drop
 : Custom host to use when generating URLs. If setting a host, S3 bucket and domain 
   should be properly configured for static hosting.
 
+-i, --tray-icon *BOOL*
+: Enable tray icon while recording
+  [default: true]
+
+-k, --stop-key
+: Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)
+ [default: empty]
+
 -m, --mouse *BOOL*
-: Show mouse cursor in screencast. (Linux only)
+: Show mouse cursor in screencast.
   [default: false]
+
+-n, --notifications *BOOL*
+: Enable desktop notifications
+  [default: true]
 
 -u, --unique-length *LENGTH*
 : Length of unique string used to create filenames.
   [default 10]
 
 -t, --transparent *BOOL*
-: Enable transparent selection, compositor is required.
-  [default true]
+: Enable transparent selection overlay, compositor is required (Linux only)
+  [default false]
 
 -V, --version
 : Prints version information

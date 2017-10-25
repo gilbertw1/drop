@@ -16,6 +16,8 @@ use sys_info;
 use objc::runtime::{Object, Class};
 #[cfg(target_os = "macos")]
 use cocoa::foundation::NSString;
+#[cfg(target_os = "macos")]
+use cocoa::base::{nil, YES, NO};
 
 #[cfg(target_os = "macos")]
 pub type Id = *mut Object;
@@ -23,6 +25,7 @@ pub type Id = *mut Object;
 #[cfg(target_os = "macos")]
 extern {
   fn CGMainDisplayID() -> u32;
+  static AVMediaTypeAudio: Id;
 }
 
 #[cfg(target_os = "linux")]
@@ -68,7 +71,7 @@ pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
 
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
-  let capture_session = create_and_initiate_macos_caputure_session(out_path, config.audio);
+  let capture_session = create_and_initiate_macos_caputure_session(out_path, config);
   ui::wait_for_user_stop();
   end_macos_capture_session(capture_session);
 }
@@ -124,21 +127,28 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, conf
                 "-show_region", if config.border { "1" } else { "0" },
                 "-draw_mouse", if config.mouse { "1" } else { "0" },
                 "-s", &format!("{}x{}", slop_out.w, slop_out.h),
-                "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y),
-                "-f", "alsa",
-                "-i", "pulse",
-                "-c:v", "libx264",
-                "-c:a", "aac",
-                "-crf", "23",
-                "-preset", "ultrafast",
-                "-movflags", "+faststart",
-                "-profile:v", "baseline",
-                "-level", "3.0",
-                "-pix_fmt", "yuv420p",
-                "-ac", "2",
-                "-strict", "experimental",
-                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
+                "-i", &format!("{}.0+{},{}", display, slop_out.x, slop_out.y)]);
 
+  if config.audio_source == "desktop" {
+    cmd.args(vec!["-f", "alsa",
+                  "-i", "pulse"]);
+  } else {
+    cmd.args(vec!["-f", "alsa",
+                  "-i", "hw:0"]);
+  }
+
+  cmd.args(vec![
+    "-c:v", "libx264",
+    "-c:a", "aac",
+    "-crf", "23",
+    "-preset", "ultrafast",
+    "-movflags", "+faststart",
+    "-profile:v", "baseline",
+    "-level", "3.0",
+    "-pix_fmt", "yuv420p",
+    "-ac", "2",
+    "-strict", "experimental",
+    "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]);
   if !config.audio {
     cmd.arg("-an");
   }
@@ -196,7 +206,7 @@ fn terminate_ffmpeg(mut child: Child) -> io::Result<ExitStatus> {
 
 
 #[cfg(target_os = "macos")]
-fn create_and_initiate_macos_caputure_session(out_path: &Path, audio: bool) -> MacOSAVCaptureSession {
+fn create_and_initiate_macos_caputure_session(out_path: &Path, config: &DropConfig) -> MacOSAVCaptureSession {
   unsafe {
     let AVCaptureSession = Class::get("AVCaptureSession").unwrap();
     let session: Id = msg_send![AVCaptureSession, alloc];
@@ -204,8 +214,15 @@ fn create_and_initiate_macos_caputure_session(out_path: &Path, audio: bool) -> M
 
     let AVCaptureScreenInput = Class::get("AVCaptureScreenInput").unwrap();
     let input: Id = msg_send![AVCaptureScreenInput, alloc];
-    let input: Id = msg_send![input, initWithDisplayID: CGMainDisplayID()];
+    let input: Id = msg_send![input, initWithDisplayID:CGMainDisplayID()];
     let input: Id = msg_send![input, autorelease];
+    msg_send![input, setCapturesCursor: if config.mouse { YES } else { NO }];
+
+    let AVCaptureDevice = Class::get("AVCaptureDevice").unwrap();
+    let AVCaptureDeviceInput = Class::get("AVCaptureDeviceInput").unwrap();
+    let audio_device: Id = msg_send![AVCaptureDevice, defaultDeviceWithMediaType:AVMediaTypeAudio];
+    let error: Id = nil;
+    let audio_input: Id = msg_send![AVCaptureDeviceInput, deviceInputWithDevice:audio_device error:error];
 
     let AVCaptureMovieFileOutput = Class::get("AVCaptureMovieFileOutput").unwrap();
     let output: Id = msg_send![AVCaptureMovieFileOutput, alloc];
@@ -213,13 +230,16 @@ fn create_and_initiate_macos_caputure_session(out_path: &Path, audio: bool) -> M
     let output: Id = msg_send![output, autorelease];
 
     msg_send![session, addInput:input];
+    if config.audio {
+      msg_send![session, addInput:audio_input];
+    }
     msg_send![session, addOutput:output];
     msg_send![session, startRunning];
 
     let NSUrl = Class::get("NSURL").unwrap();
-    let rawUrl = to_ns_string(out_path.to_string_lossy().into_owned());
-    let destUrl: Id = msg_send![NSUrl, fileURLWithPath:rawUrl];
-    msg_send![output, startRecordingToOutputFileURL:destUrl recordingDelegate:session];
+    let raw_url = to_ns_string(out_path.to_string_lossy().into_owned());
+    let dest_url: Id = msg_send![NSUrl, fileURLWithPath:raw_url];
+    msg_send![output, startRecordingToOutputFileURL:dest_url recordingDelegate:session];
 
     MacOSAVCaptureSession {
       session: session,

@@ -9,7 +9,6 @@ use gtk::prelude::*;
 #[cfg(target_os = "linux")]
 use libc::*;
 
-
 #[cfg(target_os = "macos")]
 use cocoa::base::{nil, YES, selector};
 #[cfg(target_os = "macos")]

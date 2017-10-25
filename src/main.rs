@@ -3,6 +3,8 @@ extern crate rand;
 extern crate clap;
 extern crate nix;
 extern crate sys_info;
+#[macro_use]
+extern crate lazy_static;
 
 #[cfg(target_os = "linux")]
 extern crate gtk;
