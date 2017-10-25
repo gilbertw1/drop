@@ -31,12 +31,14 @@ extern {
 #[cfg(target_os = "linux")]
 pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
   let slop_out = run_slop(config);
+  util::wait_delay(config);
   crop_and_save_screenshot(&slop_out, out_path, config);
 }
 
 #[cfg(target_os = "linux")]
 pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
   let slop_out = run_slop(config);
+  util::wait_delay(config);
   let process =
     if config.video_format == "gif" {
       start_cropped_screencast_process_gif(&slop_out, out_path, config)
@@ -60,6 +62,9 @@ pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
   let mut cmd = Command::new("screencapture");
+  if (config.delay > 0) {
+    cmd.args(&["-T", &config.delay.to_string()]);
+  }
   cmd.args(&["-s", &out_path.to_string_lossy().into_owned()]);
   let result = util::run_command_and_wait(&mut cmd, "SCREEN CAPTURE", config);
 
@@ -71,6 +76,7 @@ pub fn crop_and_take_screenshot(out_path: &Path, config: &DropConfig) {
 
 #[cfg(target_os = "macos")]
 pub fn crop_and_take_screencast(out_path: &Path, config: &DropConfig) {
+  util::wait_delay(config);
   let capture_session = create_and_initiate_macos_caputure_session(out_path, config);
   ui::wait_for_user_stop();
   end_macos_capture_session(capture_session);

@@ -2,7 +2,7 @@ use conf::DropConfig;
 
 use std::path::Path;
 use std::ffi::OsStr;
-use std::thread;
+use std::{thread, time};
 use std::io::{BufReader, BufRead};
 use std::process::{Command, Child, Stdio, ExitStatus};
 use rand;
@@ -18,6 +18,12 @@ pub fn path_file_name(path: &Path) -> String {
 
 pub fn from_os_str(os_str: &OsStr) -> String {
   os_str.to_string_lossy().into_owned()
+}
+
+pub fn wait_delay(config: &DropConfig) {
+  if config.delay > 0 {
+    thread::sleep(time::Duration::from_secs(config.delay));
+  }
 }
 
 pub fn create_drop_url(config: &DropConfig, filename: String) -> String {

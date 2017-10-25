@@ -31,6 +31,12 @@ Enable audio recording when creating screencast [default: false]
 .RS
 .RE
 .TP
+.B \-\-audio\-source \f[I]SOURCE\f[]
+Audio source to use when creating screencast.
+Possible values are mic or desktop (desktop only available on Linux)
+.RS
+.RE
+.TP
 .B \-b, \-\-border \f[I]BOOL\f[]
 Display border around screencast area while recording (does not show in
 video, Linux only) [default: true]
@@ -49,6 +55,12 @@ Key used to authenticate with Amazon AWS [default: empty]
 .TP
 .B \-\-aws\-secret \f[I]SECRET\f[]
 Secret used to authenticate with Amazon AWS [default: empty]
+.RS
+.RE
+.TP
+.B \-\-delay \f[I]SECONDS\f[]
+Number of seconds to dealy screenshot or screencast start.
+[default: 0]
 .RS
 .RE
 .TP
@@ -83,9 +95,25 @@ for static hosting.
 .RS
 .RE
 .TP
+.B \-i, \-\-tray\-icon \f[I]BOOL\f[]
+Enable tray icon while recording [default: true]
+.RS
+.RE
+.TP
+.B \-k, \-\-stop\-key
+Keybinding used to stop recording, eg.
+q (Linux only) [default: empty]
+.RS
+.RE
+.TP
 .B \-m, \-\-mouse \f[I]BOOL\f[]
 Show mouse cursor in screencast.
-(Linux only) [default: false]
+[default: false]
+.RS
+.RE
+.TP
+.B \-n, \-\-notifications \f[I]BOOL\f[]
+Enable desktop notifications [default: true]
 .RS
 .RE
 .TP
@@ -96,8 +124,8 @@ Length of unique string used to create filenames.
 .RE
 .TP
 .B \-t, \-\-transparent \f[I]BOOL\f[]
-Enable transparent selection, compositor is required.
-[default true]
+Enable transparent selection overlay, compositor is required (Linux
+only) [default false]
 .RS
 .RE
 .TP

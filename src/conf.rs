@@ -48,6 +48,7 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     audio: get_bool_value(matches, "audio", false),
     audio_source: extract_audio_source(get_string_value(matches, "audio_source")),
     border: get_bool_value(matches, "border", true),
+    delay: get_num_value(matches, "delay").unwrap_or(0),
     mouse: get_bool_value(matches, "mouse", false),
     video_format: get_video_format(matches),
     verbose: matches.is_present("verbose"),
@@ -82,6 +83,10 @@ fn none_if_empty(optvalue: Option<String>) -> Option<String> {
 
 fn get_string_value(matches: &ArgMatches, key: &str) -> Option<String> {
   matches.value_of(key).map(|m| m.to_string())
+}
+
+fn get_num_value(matches: &ArgMatches, key: &str) -> Option<u64> {
+  matches.value_of(key).map(|m| m.parse::<u64>().unwrap())
 }
 
 fn get_bool_value(matches: &ArgMatches, key: &str, default: bool) -> bool {
@@ -130,6 +135,7 @@ pub struct DropConfig {
   pub audio: bool,
   pub audio_source: String,
   pub border: bool,
+  pub delay: u64,
   pub extension: Option<String>,
   pub filename: Option<String>,
   pub mouse: bool,

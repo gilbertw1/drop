@@ -48,6 +48,10 @@ Project home page: https://github.com/gilbertw1/drop
 : Secret used to authenticate with Amazon AWS
   [default: empty]
 
+--delay *SECONDS*
+: Number of seconds to dealy screenshot or screencast start.
+  [default: 0]
+
 -e, --extension *EXTENSION*
 : Override extension of resulting file
   [default: empty]
