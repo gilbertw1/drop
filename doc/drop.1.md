@@ -28,6 +28,10 @@ Project home page: https://github.com/gilbertw1/drop
 : Enable audio recording when creating screencast
   [default: false]
 
+-b, --border *BOOL*
+: Display border around screencast area while recording (does not show in video, Linux only)
+  [default: true]
+
 --aws-bucket *BUCKET*
 : Name of S3 bucket to upload files to
   [default: empty]
@@ -61,6 +65,10 @@ Project home page: https://github.com/gilbertw1/drop
 --host *HOST*
 : Custom host to use when generating URLs. If setting a host, S3 bucket and domain 
   should be properly configured for static hosting.
+
+-m, --mouse *BOOL*
+: Show mouse cursor in screencast. (Linux only)
+  [default: false]
 
 -u, --unique-length *LENGTH*
 : Length of unique string used to create filenames.

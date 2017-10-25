@@ -31,6 +31,12 @@ Enable audio recording when creating screencast [default: false]
 .RS
 .RE
 .TP
+.B \-b, \-\-border \f[I]BOOL\f[]
+Display border around screencast area while recording (does not show in
+video, Linux only) [default: true]
+.RS
+.RE
+.TP
 .B \-\-aws\-bucket \f[I]BUCKET\f[]
 Name of S3 bucket to upload files to [default: empty]
 .RS
@@ -74,6 +80,12 @@ Prints help information
 Custom host to use when generating URLs.
 If setting a host, S3 bucket and domain should be properly configured
 for static hosting.
+.RS
+.RE
+.TP
+.B \-m, \-\-mouse \f[I]BOOL\f[]
+Show mouse cursor in screencast.
+(Linux only) [default: false]
 .RS
 .RE
 .TP
