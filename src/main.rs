@@ -37,7 +37,6 @@ use std::path::{PathBuf, Path};
 use clap::ArgMatches;
 use std::io::{self, Read, Write};
 use std::fs::File;
-use std::{thread,time};
 
 mod aws;
 mod clip;
@@ -51,11 +50,11 @@ mod ui;
 use conf::DropConfig;
 
 fn main() {
-  
+
   let mut cli_app = cli::create_drop_cli_app();
   let matches = cli_app.clone().get_matches();
   let config = conf::load_config(&matches);
-  
+
   if matches.is_present("file") {
     handle_file(config, &matches);
   } else if matches.is_present("screenshot") || matches.is_present("video") {
@@ -68,7 +67,7 @@ fn main() {
   }
 }
 
-fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {  
+fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
   let out_file =
     if matches.is_present("video") {
       take_screenshot_video(&config)
@@ -142,7 +141,7 @@ fn handle_stdin(config: DropConfig) {
     println!("ERROR: Caught error while reading input from stdin");
     std::process::exit(1);
   }
-  
+
   let out_filename = util::generate_filename(&config, None, None);
   let path = Path::new(&config.dir).join(out_filename.clone());
   let mut file = File::create(&path).unwrap();

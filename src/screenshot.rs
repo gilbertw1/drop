@@ -169,7 +169,7 @@ fn start_cropped_screencast_process_gif(slop_out: &SlopOutput, out_path: &Path, 
   cmd.args(&["-f", "x11grab",
              "-show_region", if config.border { "1" } else { "0" },
              "-draw_mouse", if config.mouse { "1" } else { "0" },
-             "-framerate", "15",
+             "-framerate", "20",
              "-s", &format!("{}x{}", slop_out.w, slop_out.h),
              "-i", &format!(":0.0+{},{}", slop_out.x, slop_out.y),
              "-codec:v", "pam",
@@ -184,10 +184,10 @@ fn post_process_screencast_gif(out_path: &Path, config: &DropConfig) {
   let cachedir = Path::new(&config.dir).join(".cache").join(cache_id);
   let pamfile = out_path.to_str().unwrap().replace(".gif", ".pam");
   let mut process_cmd = Command::new("convert");
-  process_cmd.args(&["-set", "delay", "10",
+  process_cmd.args(&["-set", "delay", "5",
                      "-limit", "disk", "unlimited",
                      "-limit", "memory", &format!("{}kiB", memory_limit),
-                     "-layers", "Optimize", 
+                     "-layers", "Optimize",
                      "-define", &format!("registry:temporary-path={}", cachedir.to_str().unwrap()),
                      &pamfile,
                      out_path.to_str().unwrap()]);
