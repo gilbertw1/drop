@@ -1,6 +1,6 @@
 [root]
 name = "drop"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "c_vec 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.27.0 (registry+https://github.com/rust-lang/crates.io-index)",
