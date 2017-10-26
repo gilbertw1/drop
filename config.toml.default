@@ -4,9 +4,8 @@ dir = '~/.drop'
 # host = 'my.host.com'
 # filename_stragey = 'prepend'
 # unique_length = 10
-# transparent = true
 # stop_key = '<ctrl><alt>q'
-# tray_icon = true
+# audio_source = 'mic'
 
 [aws]
 # bucket = 'drop'

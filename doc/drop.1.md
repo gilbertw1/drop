@@ -24,17 +24,15 @@ Project home page: https://github.com/gilbertw1/drop
 
 # OPTIONS
 
--a, --audio *BOOL*
+-a, --audio
 : Enable audio recording when creating screencast
-  [default: false]
 
 --audio-source *SOURCE*
 : Audio source to use when creating screencast.  Possible values are mic or desktop
   (desktop only available on Linux)
 
--b, --border *BOOL*
+-b, --border
 : Display border around screencast area while recording (does not show in video, Linux only)
-  [default: true]
 
 --aws-bucket *BUCKET*
 : Name of S3 bucket to upload files to
@@ -74,29 +72,25 @@ Project home page: https://github.com/gilbertw1/drop
 : Custom host to use when generating URLs. If setting a host, S3 bucket and domain 
   should be properly configured for static hosting.
 
--i, --tray-icon *BOOL*
+-i, --tray-icon
 : Enable tray icon while recording
-  [default: true]
 
--k, --stop-key
+-k, --stop-key *KEYBDINDING*
 : Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)
  [default: empty]
 
--m, --mouse *BOOL*
+-m, --mouse
 : Show mouse cursor in screencast.
-  [default: false]
 
--n, --notifications *BOOL*
-: Enable desktop notifications
-  [default: true]
+-q, --quiet
+: Do not display desktop notifications
 
 -u, --unique-length *LENGTH*
 : Length of unique string used to create filenames.
   [default 10]
 
--t, --transparent *BOOL*
+-t, --transparent
 : Enable transparent selection overlay, compositor is required (Linux only)
-  [default false]
 
 -V, --version
 : Prints version information

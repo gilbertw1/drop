@@ -26,8 +26,8 @@ It also supports using custom domains.
 Project home page: https://github.com/gilbertw1/drop
 .SH OPTIONS
 .TP
-.B \-a, \-\-audio \f[I]BOOL\f[]
-Enable audio recording when creating screencast [default: false]
+.B \-a, \-\-audio
+Enable audio recording when creating screencast
 .RS
 .RE
 .TP
@@ -37,9 +37,9 @@ Possible values are mic or desktop (desktop only available on Linux)
 .RS
 .RE
 .TP
-.B \-b, \-\-border \f[I]BOOL\f[]
+.B \-b, \-\-border
 Display border around screencast area while recording (does not show in
-video, Linux only) [default: true]
+video, Linux only)
 .RS
 .RE
 .TP
@@ -95,25 +95,24 @@ for static hosting.
 .RS
 .RE
 .TP
-.B \-i, \-\-tray\-icon \f[I]BOOL\f[]
-Enable tray icon while recording [default: true]
+.B \-i, \-\-tray\-icon
+Enable tray icon while recording
 .RS
 .RE
 .TP
-.B \-k, \-\-stop\-key
+.B \-k, \-\-stop\-key \f[I]KEYBDINDING\f[]
 Keybinding used to stop recording, eg.
 q (Linux only) [default: empty]
 .RS
 .RE
 .TP
-.B \-m, \-\-mouse \f[I]BOOL\f[]
+.B \-m, \-\-mouse
 Show mouse cursor in screencast.
-[default: false]
 .RS
 .RE
 .TP
-.B \-n, \-\-notifications \f[I]BOOL\f[]
-Enable desktop notifications [default: true]
+.B \-q, \-\-quiet
+Do not display desktop notifications
 .RS
 .RE
 .TP
@@ -123,9 +122,9 @@ Length of unique string used to create filenames.
 .RS
 .RE
 .TP
-.B \-t, \-\-transparent \f[I]BOOL\f[]
+.B \-t, \-\-transparent
 Enable transparent selection overlay, compositor is required (Linux
-only) [default false]
+only)
 .RS
 .RE
 .TP

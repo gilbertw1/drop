@@ -39,17 +39,17 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     filename_strategy: extract_filename_strategy(get_string_value(matches, "filename-strategy").or(conf.get_str("drop.filename_strategy").ok())),
     unique_length: get_string_value(matches, "unique-length").map(|ls| ls.parse::<usize>().unwrap())
       .or(conf.get_int("drop.unique_length").ok().map(|i| i as usize)) .unwrap_or(10),
-    transparent: get_bool_value(matches, "transparent", conf.get_bool("drop.transparent").unwrap_or(false)),
-    tray_icon: get_bool_value(matches, "tray-icon", conf.get_bool("drop.tray_icon").unwrap_or(true)),
+    transparent: matches.is_present("transparent"),
+    tray_icon: !matches.is_present("hide-tray-icon"),
     stop_key: get_string_value(matches, "stop-key").or(conf.get_str("drop.stop_key").ok()),
-    notifications: get_bool_value(matches, "notifications", conf.get_bool("drop.notifications").unwrap_or(true)),
+    notifications: !matches.is_present("quiet"),
     filename: get_string_value(matches, "filename"),
     extension: get_string_value(matches, "extension"),
-    audio: get_bool_value(matches, "audio", false),
-    audio_source: extract_audio_source(get_string_value(matches, "audio_source")),
-    border: get_bool_value(matches, "border", true),
+    audio: matches.is_present("audio"),
+    audio_source: extract_audio_source(get_string_value(matches, "audio_source").or(conf.get_str("drop.audio_source").ok())),
+    border: matches.is_present("border"),
     delay: get_num_value(matches, "delay").unwrap_or(0),
-    mouse: get_bool_value(matches, "mouse", false),
+    mouse: matches.is_present("mouse"),
     video_format: get_video_format(matches),
     verbose: matches.is_present("verbose"),
   };
@@ -87,10 +87,6 @@ fn get_string_value(matches: &ArgMatches, key: &str) -> Option<String> {
 
 fn get_num_value(matches: &ArgMatches, key: &str) -> Option<u64> {
   matches.value_of(key).map(|m| m.parse::<u64>().unwrap())
-}
-
-fn get_bool_value(matches: &ArgMatches, key: &str, default: bool) -> bool {
-  matches.value_of(key).unwrap_or(&format!("{}", default)).parse::<bool>().unwrap_or(default)
 }
 
 fn get_video_format(matches: &ArgMatches) -> String {

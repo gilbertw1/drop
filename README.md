@@ -91,9 +91,9 @@ records a video. A status bar icon will appear that can be used to terminate the
 
     drop -v
 
-Optionally include audio (off by default, Linux only) 
+Optionally include audio (off by default) 
 
-    drop -v -a true
+    drop -v -a
     
 Create screencast as a gif (Linux Only)
 
@@ -144,15 +144,13 @@ exist, it will be created the first time drop is run. It's values are as follows
                                     #       prepend: Prepend unique string to filename
                                     #       exact: Don't alter filename when uploading
                                     #       replace: Replace filename with unique string
-    transparent = false             # Uses transparent overlay when selecting area of screen (default: false)
-                                    #  REQUIRES Compositor when set to true [Linux Only]
-    tray_icon = true                # Display tray icon that can be used to stop screencast while recording (default: true)
     stop_key = '<control><shift>q'  # If defined specifies a keybinding to listen for that
                                     # that will be used to terminate a recording. (default: empty)
                                     # uses gtk accelorator format: https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse
                                     # Eg. <ctrl><alt>q
-    notifications = true            # Display desktop notifications (default: true)
-
+    audio_source = 'mic'            # Specifies audio source to use when recording audio during a
+                                    # screen cast. Possible values are mic, desktop (Linux only)
+                                    # (default: mic)
     [aws]
     bucket = 'drop'                 # S3 bucket to upload screenshots & files to (DEFAULT: empty)
     key = ''                        # AWS credentials used to authenticate with S3 (DEFAULT: empty)
@@ -161,6 +159,50 @@ exist, it will be created the first time drop is run. It's values are as follows
 
 * More info on aws access keys [here](https://aws.amazon.com/developers/access-keys/)
 * If aws bucket, key, or secret is missing drop will only save the screenshot locally
+
+Reference
+---------
+
+```
+drop 0.3.1
+Bryan G. <bryan@bryan.codes>
+Screenshot & file upload tool with S3 support - http://github.com/gilbertw1/drop
+
+USAGE:
+    drop [FLAGS] [OPTIONS] [FILE]
+
+FLAGS:
+    -a, --audio           Enable audio in screencast
+    -b, --border          Display border around screencast area while recording (does not show in video, Linux only)
+    -h, --help            Prints help information
+    -m, --mouse           Show mouse cursor in screencast.
+    -i, --no-tray-icon    Do not display tray icon while recording screencast.
+    -q, --quiet           Hide desktop notifications
+    -s, --screenshot      Capture screenshot
+    -t, --transparent     Enable transparent selection overlay, compositor is required (Linux only)
+    -V, --version         Prints version information
+        --verbose         Enables verbose logging
+    -v, --video           Record video screencast
+
+OPTIONS:
+        --audio-source <AUDIO_SOURCE>     Audio source to use when creating screencast. (desktop only available on
+                                          Linux) [default: mic]  [values: mic, desktop]
+        --aws-bucket <AWS_BUCKET>         S3 Bucket to upload to
+        --aws-key <AWS_KEY>               AWS access key
+        --aws-secret <AWS_SECRET>         AWS access secret
+    -d, --delay <SECONDS>                 Number of seconds to delay screenshot or screencast start. [default: 0]
+    -e, --extension <EXTENSION>           Extension to use when creating a filename
+    -f, --filename <FILENAME>             Filename to use for creating resulting file
+        --filename-strategy <STRATEGY>    File upload naming strategy [values: exact, append, prepend, replace]
+        --host <HOST>                     Custom host
+    -k, --stop-key <KEY_BINDING>          Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)
+    -u, --unique-length <LENGTH>          Length of unique string used to create filenames
+        --video-format <FORMAT>           Format to record screencast [default: mp4]  [values: mp4, gif]
+
+ARGS:
+    <FILE>    Optional file to upload. If equal to '-' then drop reads from stdin
+
+```
 
 S3 Setup
 --------
@@ -215,3 +257,4 @@ Roadmap
 * Better error handling
 * Add support for selecting portion of screen when screencasting on MacOS
 * Add support for uploading to more remote backends than just S3
+
