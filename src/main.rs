@@ -75,21 +75,12 @@ fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
       take_screenshot_image(&config)
     };
 
-  if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
-    println!("S3 not properly configured, not uploading screenshot.");
-    clip::copy_to_clipboard(format!("file://{}", util::path_to_str(&out_file.as_path())));
-    if config.notifications {
-      notify::send_screenshot_notification(&out_file.as_path(), &config);
-    }
-  } else {
-    aws::upload_file_to_s3(&config, &out_file.as_path(), None);
-    let url = util::create_drop_url(&config, util::path_file_name(&out_file.as_path()));
-    clip::copy_to_clipboard(url.clone());
-    if config.notifications {
-      notify::send_screenshot_notification(&out_file.as_path(), &config);
-    }
-    println!("{}", url);
+  let url = handle_upload_and_produce_url(&config, &out_file.as_path(), None);
+  clip::copy_to_clipboard(url.clone());
+  if config.notifications {
+    notify::send_screenshot_notification(&out_file.as_path(), &config);
   }
+  println!("{}", url);
 }
 
 fn take_screenshot_image(config: &DropConfig) -> PathBuf {
@@ -119,12 +110,9 @@ fn handle_file_upload(config: DropConfig, file: &Path) {
   if !file.exists() {
     println!("File does not exist! ({:?})", file);
     std::process::exit(1);
-  } else if config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
-    println!("S3 not properly configured, not uploading file.")
   } else {
     let filename = util::generate_filename(&config, file.file_name().map(|s| util::from_os_str(s)), None);
-    aws::upload_file_to_s3(&config, &file, Some(filename.clone()));
-    let url = util::create_drop_url(&config, filename.clone());
+    let url = handle_upload_and_produce_url(&config, &file, Some(filename.clone()));
     clip::copy_to_clipboard(url.clone());
     if config.notifications {
       notify::send_upload_notification(filename, &config);
@@ -152,11 +140,19 @@ fn handle_stdin(config: DropConfig) {
     std::process::exit(1)
   }
 
-  aws::upload_file_to_s3(&config, &path, Some(out_filename.clone()));
-  let url = util::create_drop_url(&config, out_filename.clone());
+  let url = handle_upload_and_produce_url(&config, &path, Some(out_filename.clone()));
   clip::copy_to_clipboard(url.clone());
   if config.notifications {
     notify::send_upload_notification(out_filename.clone(), &config);
   }
   println!("{}", url);
+}
+
+fn handle_upload_and_produce_url(config: &DropConfig, file: &Path, filename: Option<String>) -> String {
+  if config.local || config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
+    format!("file://{}", util::path_to_str(file.canonicalize().unwrap().as_path()))
+  } else {
+    aws::upload_file_to_s3(&config, &file, filename);   
+    util::create_drop_url(&config, util::from_os_str(file.file_name().unwrap()))
+  }
 }

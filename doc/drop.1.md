@@ -79,6 +79,9 @@ Project home page: https://github.com/gilbertw1/drop
 : Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)
  [default: empty]
 
+-l, --local
+: Don't upload file to remote location (produces local file url)
+
 -m, --mouse
 : Show mouse cursor in screencast.
 

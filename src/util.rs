@@ -12,10 +12,6 @@ pub fn path_to_str(path: &Path) -> String {
   path.to_string_lossy().into_owned()
 }
 
-pub fn path_file_name(path: &Path) -> String {
-  from_os_str(path.file_name().unwrap())
-}
-
 pub fn from_os_str(os_str: &OsStr) -> String {
   os_str.to_string_lossy().into_owned()
 }
