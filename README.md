@@ -56,7 +56,7 @@ Run drop:
 
 AUR - https://aur.archlinux.org/packages/drop
 
-    yaourt -S drop
+    yay -S drop
 
 ### MacOS
 
