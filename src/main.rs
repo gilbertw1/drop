@@ -10,6 +10,8 @@ extern crate lazy_static;
 #[cfg(target_os = "linux")]
 extern crate gtk;
 #[cfg(target_os = "linux")]
+extern crate libappindicator;
+#[cfg(target_os = "linux")]
 extern crate libc;
 
 #[cfg(target_os = "linux")]

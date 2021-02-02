@@ -5,6 +5,8 @@ use std;
 #[cfg(target_os = "linux")]
 use gtk;
 #[cfg(target_os = "linux")]
+use libappindicator::{AppIndicator, AppIndicatorStatus};
+#[cfg(target_os = "linux")]
 use gtk::prelude::*;
 #[cfg(target_os = "linux")]
 use libc::*;
@@ -24,41 +26,25 @@ pub fn wait_for_user_stop(config: &DropConfig) {
     std::process::exit(1);
   }
 
-  let mut status_icon: Option<gtk::StatusIcon> = None;
-
-  if config.tray_icon {
-    status_icon = Some(gtk_create_stop_status_icon());
-  }
+  let mut indicator = AppIndicator::new("Drop", "");
+  indicator.set_status(AppIndicatorStatus::Active);
+  let icon_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("icon");
+  indicator.set_icon_theme_path(icon_path.to_str().unwrap());
+  indicator.set_icon_full("drop", "icon");
+  let mut m = gtk::Menu::new();
+  let mi = gtk::CheckMenuItem::with_label("End Recording");
+  mi.connect_activate(|_| {
+    gtk::main_quit();
+  });
+  m.append(&mi);
+  indicator.set_menu(&mut m);
+  m.show_all();
 
   if config.stop_key.is_some() {
     create_stop_keybinding(config.stop_key.clone().unwrap());
   }
 
   gtk::main();
-}
-
-#[cfg(target_os = "linux")]
-fn gtk_create_stop_status_icon() -> gtk::StatusIcon {
-  let status_icon = gtk::StatusIcon::new_from_icon_name("camera");
-  status_icon.set_title("Drop");
-
-  status_icon.connect_activate(|icon| {
-    let menu = gtk::Menu::new();
-    let stop_recording = gtk::MenuItem::new_with_label("Stop Recording");
-    menu.append(&stop_recording);
-    let iclone = icon.clone();
-
-    stop_recording.connect_activate(move |_| {
-      iclone.set_visible(false);
-      gtk::main_quit();
-    });
-
-    stop_recording.show();
-    let button: u32 = 0;
-    menu.popup_easy(button, gtk::get_current_event_time());
-  });
-
-  status_icon
 }
 
 #[cfg(target_os = "linux")]

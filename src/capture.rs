@@ -70,7 +70,7 @@ pub fn screencast_x11(out_path: &Path, config: &DropConfig) {
     };
 
   ui::wait_for_user_stop(config);
-  let result = terminate_ffmpeg(process);
+  let result = terminate_record_process(process);
 
   if config.video_format == "gif" {
     post_process_screencast_gif(out_path, config)
@@ -88,7 +88,9 @@ pub fn screencast_wayland(out_path: &Path, config: &DropConfig) {
   let process = start_cropped_screencast_process_wayland(slurp_out, out_path, config);
 
   ui::wait_for_user_stop(config);
-  let result = terminate_ffmpeg(process);
+  println!("Terminated Record, waiting...");
+  let result = terminate_record_process(process);
+  println!("Termination complete");
 
   if config.video_format == "gif" {
     post_process_screencast_gif(out_path, config)
@@ -231,6 +233,7 @@ fn start_cropped_screencast_process(slop_out: &SlopOutput, out_path: &Path, conf
 fn start_cropped_screencast_process_wayland(slurp_out: String, out_path: &Path, config: &DropConfig) -> Child {
   let mut cmd = Command::new("wf-recorder");
   cmd.args(&["-g", slurp_out.trim(), "--file", &out_path.to_string_lossy().into_owned()]);
+  println!("command: {:?}", cmd);
   util::run_command(&mut cmd, "WF-RECORDER", config)
 }
 
@@ -274,11 +277,11 @@ fn post_process_screencast_gif(out_path: &Path, config: &DropConfig) {
   }
 }
 
-fn terminate_ffmpeg(mut child: Child) -> io::Result<ExitStatus> {
+fn terminate_record_process(mut child: Child) -> io::Result<ExitStatus> {
   let child_id = child.id();
-  let result = kill(Pid::from_raw(child_id as i32), Signal::SIGTERM);
+  let result = kill(Pid::from_raw(child_id as i32), Signal::SIGINT);
   if result.is_err() {
-    println!("WARNING: Failed to propertly terminate ffmpeg process")
+    println!("WARNING: Failed to propertly terminate record process")
   }
   child.wait()
 }
