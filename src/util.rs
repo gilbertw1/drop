@@ -7,6 +7,7 @@ use std::io::{BufReader, BufRead};
 use std::process::{Command, Child, Stdio, ExitStatus};
 use rand;
 use rand::Rng;
+use rand::distributions::Alphanumeric;
 
 pub fn path_to_str(path: &Path) -> String {
   path.to_string_lossy().into_owned()
@@ -82,7 +83,7 @@ fn append_rand_string(value: &str, len: usize) -> String {
 }
 
 pub fn rand_string(len: usize) -> String {
-  rand::thread_rng().gen_ascii_chars().take(len).collect()
+  rand::thread_rng().sample_iter(Alphanumeric).take(len).map(char::from).collect()
 }
 
 pub fn run_command_and_wait(cmd: &mut Command, name: &str, config: &DropConfig) -> ExitStatus {

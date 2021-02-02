@@ -52,6 +52,7 @@ pub fn load_config(matches: &ArgMatches) -> DropConfig {
     local: matches.is_present("local"),
     mouse: matches.is_present("mouse"),
     video_format: get_video_format(matches),
+    display_server: get_display_server(matches),
     verbose: matches.is_present("verbose"),
   };
 
@@ -97,6 +98,14 @@ fn get_video_format(matches: &ArgMatches) -> String {
   }
 }
 
+fn get_display_server(matches: &ArgMatches) -> String {
+  match matches.value_of("display-server") {
+    Some("wayland") => "wayland".to_string(),
+    Some("x11") => "x11".to_string(),
+    _ => std::env::var("CASE_INSENSITIVE").ok().unwrap_or("x11".to_string()),
+  }
+}
+
 fn ensure_directory_exists(dir: &PathBuf) {
   let result = std::fs::create_dir_all(dir);
   if result.is_err() {
@@ -133,6 +142,7 @@ pub struct DropConfig {
   pub audio_source: String,
   pub border: bool,
   pub delay: u64,
+  pub display_server: String,
   pub extension: Option<String>,
   pub filename: Option<String>,
   pub local: bool,

@@ -119,4 +119,10 @@ pub fn create_drop_cli_app() -> App<'static,'static> {
          .possible_values(&["mp4", "gif"])
          .default_value("mp4")
          .takes_value(true))
+    .arg(Arg::with_name("display-server")
+         .long("display-server")
+         .value_name("DISPLAY_SERVER")
+         .help("Indicates which display server to target (Linux only - Defaults to $XDG_SESSION_TYPE or x11)")
+         .possible_values(&["x11", "wayland"])
+         .takes_value(true))
 }

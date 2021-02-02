@@ -3,6 +3,7 @@ extern crate rand;
 extern crate clap;
 extern crate nix;
 extern crate sys_info;
+extern crate anyhow;
 #[macro_use]
 extern crate lazy_static;
 
@@ -42,7 +43,7 @@ mod aws;
 mod clip;
 mod conf;
 mod notify;
-mod screenshot;
+mod capture;
 mod util;
 mod cli;
 mod ui;
@@ -58,7 +59,7 @@ fn main() {
   if matches.is_present("file") {
     handle_file(config, &matches);
   } else if matches.is_present("screenshot") || matches.is_present("video") {
-    handle_screenshot(config, &matches);
+    handle_screen_capture(config, &matches);
   } else {
     let result = cli_app.print_help();
     if result.is_err() {
@@ -67,12 +68,12 @@ fn main() {
   }
 }
 
-fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
+fn handle_screen_capture(config: DropConfig, matches: &ArgMatches) {
   let out_file =
     if matches.is_present("video") {
-      take_screenshot_video(&config)
+      capture_screencast(&config)
     } else {
-      take_screenshot_image(&config)
+      capture_screenshot(&config)
     };
 
   let url = handle_upload_and_produce_url(&config, &out_file.as_path(), None);
@@ -83,17 +84,17 @@ fn handle_screenshot(config: DropConfig, matches: &ArgMatches) {
   println!("{}", url);
 }
 
-fn take_screenshot_image(config: &DropConfig) -> PathBuf {
+fn capture_screenshot(config: &DropConfig) -> PathBuf {
   let out_file_name = util::generate_filename(config, None, Some("png".to_string()));
   let out_file = Path::new(&config.dir).join(out_file_name);
-  screenshot::crop_and_take_screenshot(out_file.as_path(), config);
+  capture::screenshot(out_file.as_path(), config);
   out_file
 }
 
-fn take_screenshot_video(config: &DropConfig) -> PathBuf {
+fn capture_screencast(config: &DropConfig) -> PathBuf {
   let out_file_name = util::generate_filename(config, None, Some(config.video_format.clone()));
   let out_file = Path::new(&config.dir).join(out_file_name);
-  screenshot::crop_and_take_screencast(out_file.as_path(), config);
+  capture::screencast(out_file.as_path(), config);
   out_file
 }
 
