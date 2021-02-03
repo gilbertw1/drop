@@ -102,7 +102,7 @@ fn get_display_server(matches: &ArgMatches) -> String {
   match matches.value_of("display-server") {
     Some("wayland") => "wayland".to_string(),
     Some("x11") => "x11".to_string(),
-    _ => std::env::var("CASE_INSENSITIVE").ok().unwrap_or("x11".to_string()),
+    _ => std::env::var("XDG_SESSION_TYPE").ok().unwrap_or("x11".to_string()),
   }
 }
 
