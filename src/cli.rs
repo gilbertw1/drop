@@ -2,8 +2,8 @@ use clap::{Arg, App};
 
 pub fn create_drop_cli_app() -> App<'static,'static> {
   App::new("drop")
-    .version("0.3.2")
-    .author("Bryan G. <bryan@bryan.codes>")
+    .version("0.3.3")
+    .author("Bryan G. <bryan@bryan.sh>")
     .about("Screenshot & file upload tool with S3 support - http://github.com/gilbertw1/drop")
     .arg(Arg::with_name("audio")
          .short("-a")
@@ -81,12 +81,6 @@ pub fn create_drop_cli_app() -> App<'static,'static> {
          .long("quiet")
          .short("-q")
          .help("Hide desktop notifications"))
-    .arg(Arg::with_name("stop-key")
-         .long("stop-key")
-         .short("-k")
-         .value_name("KEY_BINDING")
-         .help("Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)")
-         .takes_value(true))
     .arg(Arg::with_name("screenshot")
          .short("s")
          .long("screenshot")

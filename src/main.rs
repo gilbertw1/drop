@@ -14,8 +14,6 @@ extern crate libappindicator;
 #[cfg(target_os = "linux")]
 extern crate libc;
 
-#[cfg(target_os = "linux")]
-#[link(name = "keybinder-3.0")]
 extern { }
 
 #[cfg(target_os = "macos")]
@@ -155,7 +153,7 @@ fn handle_upload_and_produce_url(config: &DropConfig, file: &Path, filename: Opt
   if config.local || config.aws_bucket.is_none() || config.aws_key.is_none() || config.aws_secret.is_none() {
     format!("file://{}", util::path_to_str(file.canonicalize().unwrap().as_path()))
   } else {
-    aws::upload_file_to_s3(&config, &file, filename);   
-    util::create_drop_url(&config, util::from_os_str(file.file_name().unwrap()))
+    aws::upload_file_to_s3(&config, &file, &filename);
+    util::create_drop_url(&config, filename.unwrap_or(util::from_os_str(file.file_name().unwrap())))
   }
 }

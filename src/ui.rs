@@ -40,19 +40,7 @@ pub fn wait_for_user_stop(config: &DropConfig) {
   indicator.set_menu(&mut m);
   m.show_all();
 
-  if config.stop_key.is_some() {
-    create_stop_keybinding(config.stop_key.clone().unwrap());
-  }
-
   gtk::main();
-}
-
-#[cfg(target_os = "linux")]
-fn create_stop_keybinding(keybinding: String) {
-  init_keybinder();
-  bind_key(keybinding.as_ref(), move |_| {
-    gtk::main_quit();
-  });
 }
 
 #[cfg(target_os = "macos")]
@@ -82,39 +70,4 @@ pub fn wait_for_user_stop() {
 
     app.run();
   }
-}
-
-// Adapted from: https://github.com/bram209/rs-gtk-3.0-keybinder
-#[cfg(target_os = "linux")]
-extern {
-  fn keybinder_init();
-  fn keybinder_bind(keystring: *const c_char, handler: unsafe extern fn(*const c_char, *mut c_void), user_data: *mut c_void) -> c_int;
-}
-
-#[cfg(target_os = "linux")]
-unsafe extern fn key_handler<F>(keycode: *const c_char, arg: *mut c_void) where F: FnMut(String) {
-  let keycode = std::ffi::CStr::from_ptr(keycode).to_str();
-  match keycode {
-    Ok(keycode) => {
-      let closure = arg as *mut F;
-      let keycode = keycode.to_owned();
-      (*closure)(keycode);
-    },
-    Err(_) => {
-      println!("Utf8 error for {:?}", keycode)
-    }
-  }
-}
-
-#[cfg(target_os = "linux")]
-fn init_keybinder() {
-  unsafe { keybinder_init(); }
-}
-
-#[cfg(target_os = "linux")]
-fn bind_key<F: Fn(String)>(hotkey: &str, callback: F) -> bool where F: FnMut(String) {
-  let c_msg = std::ffi::CString::new(hotkey).unwrap();
-
-  let cb = &callback as *const _ as *mut c_void;
-  unsafe { keybinder_bind(c_msg.as_ptr(), key_handler::<F>, cb) == 1 }
 }

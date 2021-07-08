@@ -5,14 +5,14 @@ use std;
 use std::process::Command;
 use std::path::Path;
 
-pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: Option<String>) {
+pub fn upload_file_to_s3(config: &DropConfig, file_path: &Path, file_name: &Option<String>) {
 
   if !file_path.exists() {
     println!("ERROR: File does not exist, nothing to upload to S3! ({:?})", file_path);
     std::process::exit(1);
   }
   
-  let object_name = file_name.unwrap_or(file_path.file_name().unwrap().to_string_lossy().into_owned());
+  let object_name = file_name.to_owned().unwrap_or(file_path.file_name().unwrap().to_string_lossy().into_owned());
   let mut cmd = Command::new("s3cmd");
   cmd.arg("--force")
     .arg("--follow-symlinks")

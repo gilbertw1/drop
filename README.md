@@ -14,12 +14,18 @@ Dependencies
 * s3cmd - http://s3tools.org/s3cmd
 * xsel - http://www.vergenet.net/%7Econrad/software/xsel/
 
-*Optional*
+*Optional (X11)*
 
 * slop (screenshot + screencast) - https://github.com/naelstrof/slop
 * imagemagick (screenshot + gif screencast) - https://www.imagemagick.org
 * ffmpeg (screencast) - https://ffmpeg.org
-* libkeybinder - https://github.com/kupferlauncher/keybinder/tree/keybinder-3.0
+
+*Optional (Wayland)*
+
+* slurp (screenshot + screencast) - https://github.com/emersion/slurp
+* grim (screenshot) - https://github.com/emersion/grim
+* wf-recorder (screencast) - https://github.com/ammen99/wf-recorder
+* imagemagick (gif screencast) - https://www.imagemagick.org
 
 ### MacOS
 
@@ -79,7 +85,7 @@ Comprehensive help can be accessed easily by using the ```-h``` flag.
 Drop can be used to take a screenshot and allows you to select a portion of the screen to save and
 upload. Additionally, a single window can be screenshotted by simply clicking on the window. Once
 the screenshot has been saved and upload a notification will popup saying the screenshot has been
-upload and a url to the screenshot will be saved in the clipboard.
+uploaded and a url to the screenshot will be saved in the clipboard.
 
     drop -s
     
@@ -144,10 +150,6 @@ exist, it will be created the first time drop is run. It's values are as follows
                                     #       prepend: Prepend unique string to filename
                                     #       exact: Don't alter filename when uploading
                                     #       replace: Replace filename with unique string
-    stop_key = '<control><shift>q'  # If defined specifies a keybinding to listen for that
-                                    # that will be used to terminate a recording. (default: empty)
-                                    # uses gtk accelorator format: https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse
-                                    # Eg. <ctrl><alt>q
     audio_source = 'mic'            # Specifies audio source to use when recording audio during a
                                     # screen cast. Possible values are mic, desktop (Linux only)
                                     # (default: mic)
@@ -164,44 +166,46 @@ Reference
 ---------
 
 ```
-drop 0.3.1
-Bryan G. <bryan@bryan.codes>
-Screenshot & file upload tool with S3 support - http://github.com/gilbertw1/drop
-
-USAGE:
-    drop [FLAGS] [OPTIONS] [FILE]
-
-FLAGS:
-    -a, --audio           Enable audio in screencast
-    -b, --border          Display border around screencast area while recording (does not show in video, Linux only)
-    -h, --help            Prints help information
-    -m, --mouse           Show mouse cursor in screencast.
-    -i, --no-tray-icon    Do not display tray icon while recording screencast.
-    -q, --quiet           Hide desktop notifications
-    -s, --screenshot      Capture screenshot
-    -t, --transparent     Enable transparent selection overlay, compositor is required (Linux only)
-    -V, --version         Prints version information
-        --verbose         Enables verbose logging
-    -v, --video           Record video screencast
-
-OPTIONS:
-        --audio-source <AUDIO_SOURCE>     Audio source to use when creating screencast. (desktop only available on
-                                          Linux) [default: mic]  [values: mic, desktop]
-        --aws-bucket <AWS_BUCKET>         S3 Bucket to upload to
-        --aws-key <AWS_KEY>               AWS access key
-        --aws-secret <AWS_SECRET>         AWS access secret
-    -d, --delay <SECONDS>                 Number of seconds to delay screenshot or screencast start. [default: 0]
-    -e, --extension <EXTENSION>           Extension to use when creating a filename
-    -f, --filename <FILENAME>             Filename to use for creating resulting file
-        --filename-strategy <STRATEGY>    File upload naming strategy [values: exact, append, prepend, replace]
-        --host <HOST>                     Custom host
-    -k, --stop-key <KEY_BINDING>          Keybinding used to stop recording, eg. <ctrl><alt>q (Linux only)
-    -u, --unique-length <LENGTH>          Length of unique string used to create filenames
-        --video-format <FORMAT>           Format to record screencast [default: mp4]  [values: mp4, gif]
-
-ARGS:
+drop 0.3.3                                                                                                                             │
+Bryan G. <bryan@bryan.sh>                                                                                                              │
+Screenshot & file upload tool with S3 support - http://github.com/gilbertw1/drop                                                       │
+                                                                                                                                       │
+USAGE:                                                                                                                                 │
+    drop [FLAGS] [OPTIONS] [FILE]                                                                                                      │
+                                                                                                                                       │
+FLAGS:                                                                                                                                 │
+    -a, --audio           Enable audio in screencast                                                                                   │
+    -b, --border          Display border around screencast area while recording (does not show in video, Linux only)                   │
+    -h, --help            Prints help information                                                                                      │
+    -l, --local           Don't upload file to remote location (produces local file url)                                               │
+    -m, --mouse           Show mouse cursor in screencast.                                                                             │
+    -i, --no-tray-icon    Do not display tray icon while recording screencast.                                                         │
+    -q, --quiet           Hide desktop notifications                                                                                   │
+    -s, --screenshot      Capture screenshot                                                                                           │
+    -t, --transparent     Enable transparent selection overlay, compositor is required (Linux only)                                    │
+    -V, --version         Prints version information                                                                                   │
+        --verbose         Enables verbose logging                                                                                      │
+    -v, --video           Record video screencast                                                                                      │
+                                                                                                                                       │
+OPTIONS:                                                                                                                               │
+        --audio-source <AUDIO_SOURCE>        Audio source to use when creating screencast. (desktop only available on                  │
+                                             Linux) [default: mic]  [possible values: mic, desktop]                                    │
+        --aws-bucket <AWS_BUCKET>            S3 Bucket to upload to                                                                    │
+        --aws-key <AWS_KEY>                  AWS access key                                                                            │
+        --aws-secret <AWS_SECRET>            AWS access secret                                                                         │
+    -d, --delay <SECONDS>                    Number of seconds to delay screenshot or screencast start. [default: 0]                   │
+        --display-server <DISPLAY_SERVER>    Indicates which display server to target (Linux only - Defaults to                        │
+                                             $XDG_SESSION_TYPE or x11) [possible values: x11, wayland]                                 │
+    -e, --extension <EXTENSION>              Extension to use when creating a filename                                                 │
+    -f, --filename <FILENAME>                Filename to use for creating resulting file                                               │
+        --filename-strategy <STRATEGY>       File upload naming strategy [possible values: exact, append, prepend,                     │
+                                             replace]                                                                                  │
+        --host <HOST>                        Custom host                                                                               │
+    -u, --unique-length <LENGTH>             Length of unique string used to create filenames                                          │
+        --video-format <FORMAT>              Format to record screencast [default: mp4]  [possible values: mp4, gif]                   │
+                                                                                                                                       │
+ARGS:                                                                                                                                  │
     <FILE>    Optional file to upload. If equal to '-' then drop reads from stdin
-
 ```
 
 S3 Setup
