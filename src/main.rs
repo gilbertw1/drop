@@ -4,6 +4,9 @@ extern crate clap;
 extern crate nix;
 extern crate sys_info;
 extern crate anyhow;
+extern crate flate2;
+extern crate tar;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -16,28 +19,12 @@ extern crate libc;
 
 extern { }
 
-#[cfg(target_os = "macos")]
-#[macro_use] extern crate objc;
-#[cfg(target_os = "macos")]
-extern crate cocoa;
-
-#[cfg(target_os = "macos")]
-#[link(name = "Cocoa", kind = "framework")]
-extern { }
-#[cfg(target_os = "macos")]
-#[link(name = "Foundation", kind = "framework")]
-extern { }
-#[cfg(target_os = "macos")]
-#[link(name = "AVFoundation", kind = "framework")]
-extern { }
-#[cfg(target_os = "macos")]
-#[link(name = "CoreGraphics", kind = "framework")]
-extern { }
-
 use std::path::{PathBuf, Path};
 use clap::ArgMatches;
 use std::io::{self, Read, Write};
 use std::fs::File;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 
 mod aws;
 mod clip;
@@ -103,7 +90,13 @@ fn handle_file(config: DropConfig, matches: &ArgMatches) {
   if file == "-" {
     handle_stdin(config);
   } else {
-    handle_file_upload(config, Path::new(file));
+    let path = Path::new(file);
+    if path.is_dir() {
+      let archive = archive_directory(&path);
+      handle_file_upload(config, &archive.as_path())
+    } else {
+      handle_file_upload(config, &path);
+    }
   }
 }
 
@@ -120,6 +113,17 @@ fn handle_file_upload(config: DropConfig, file: &Path) {
     }
     println!("{}", url);
   }
+}
+
+fn archive_directory(file: &Path) -> PathBuf {
+  let archive_path = file.with_extension("tar.gz");
+  let archive_file = File::create(&archive_path).unwrap();
+  let enc = GzEncoder::new(archive_file, Compression::default());
+  let mut tar = tar::Builder::new(enc);
+  let file_name = file.file_name().map(|s| util::from_os_str(s)).unwrap_or("archive".to_string());
+  tar.append_dir_all(file_name, file).unwrap();
+  tar.finish().unwrap();
+  archive_path
 }
 
 fn handle_stdin(config: DropConfig) {
